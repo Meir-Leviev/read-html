@@ -51,48 +51,128 @@ const COURSE = {
 
 /* ---------------------------------------------------------------- L1 */
 {
- id:'L1', title:'Document structure', blurb:'DOCTYPE, html, head, body, meta, title, link, script',
+ id:'L1', title:'Document structure', blurb:'The page skeleton: DOCTYPE, html, head, body, meta, title, link, script',
  topicList:['doctype','html','head','body','meta-charset','meta-viewport','meta-description','title','link','script'],
  intro:[
-  'An HTML file is a **tree of elements**. An element is written `<name attr="value">content</name>`. Elements with no content (`<meta>`, `<link>`, `<br>`) are **void**: they have no closing tag.',
-  '`<!DOCTYPE html>` is not an element. It tells the browser to use modern standards mode. Then `<html>` is the root and has exactly two children:',
-  '- `<head>`: metadata, not drawn on the page.',
-  '- `<body>`: everything the user actually sees.',
-  'Typical head contents: `<meta charset>` (text encoding), `<meta name="viewport">` (mobile scaling), `<meta name="description">` (search-engine snippet), `<title>` (tab title), `<link>` (relates another file, usually CSS) and `<script>` (JavaScript). Python analogy: head ≈ imports and config, body ≈ `main()`.'
+  'HTML is plain text with **tags** in angle brackets. Most tags come in pairs: `<p>Hello</p>` has an opening tag `<p>`, some content, and a closing tag `</p>` (note the slash). Together they form an **element**. A few tags stand alone with no closing tag, like `<meta>` and `<link>`.',
+  'Every HTML page has the same skeleton:',
+  '- `<!DOCTYPE html>`: always the first line. It means “this is modern HTML”.',
+  '- `<html>`: wraps everything else.',
+  '- `<head>`: information **about** the page. Not shown in the window.',
+  '- `<body>`: the part you actually **see**.',
+  'Things you will find inside `<head>`: `<title>` (the name on the browser tab), `<meta>` (settings: text encoding, phone layout, search description), `<link>` (connects a CSS file for looks) and `<script>` (connects a JavaScript file). Python analogy: head ≈ imports and setup, body ≈ `main()`.'
  ],
- example:{ h:90, code:`<!DOCTYPE html>
+ example:{ h:70, code:`<!DOCTYPE html>
 <html>
 <head>
+  <title>My Page</title>
+</head>
+<body>
+  <p>Hello!</p>
+</body>
+</html>` },
+ example2:{ title:'Inside the head: the extra settings', h:50, code:`<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="A tiny demo page">
   <title>My Page</title>
   <link rel="stylesheet" href="style.css">
   <script src="app.js"><\/script>
-</head>
-<body>
-  <h1>Hello</h1>
-</body>
-</html>`, notes:{
-   'meta@name':'What kind of metadata this tag carries: `viewport`, `description`, ...',
-   'meta@content':'The value of the metadata named by `name`.' } },
+</head>` },
  questions:[
-  { type:'choice', q:'Which element contains everything the user **sees** in the browser window?',
+  { type:'choice', q:'Which one is the **closing tag** of `<p>`?',
+    options:['`</p>`','`<p/>`','`<end>`','`<p>`'], answer:0,
+    why:'A closing tag is the same name with a slash in front.', topics:[] },
+  { type:'choice', q:'Which element holds everything you can **see** in the browser window?',
     options:['`<html>`','`<head>`','`<body>`','`<title>`'], answer:2,
-    why:'`<body>` holds the visible content. `<head>` is metadata and `<html>` just wraps both.', topics:['body'] },
+    why:'`<body>` is the visible part of the page.', topics:['body'] },
+  { type:'choice', q:'Which element holds information about the page that is **not** shown (like its title)?',
+    options:['`<body>`','`<head>`','`<p>`','`<link>`'], answer:1,
+    why:'`<head>` is for settings and metadata. Nothing in it is drawn on the page.', topics:['head'] },
+  { type:'choice', q:'Which tag wraps the **whole page**, with `<head>` and `<body>` inside it?',
+    options:['`<html>`','`<title>`','`<script>`','`<meta>`'], answer:0,
+    why:'`<html>` is the root: everything else lives inside it.', topics:['html'] },
+  { type:'choice', q:'What is the very **first line** of a modern HTML page?',
+    options:['`<!DOCTYPE html>`','`<html>`','`<head>`','`<body>`'], answer:0,
+    why:'`<!DOCTYPE html>` tells the browser to treat the file as modern HTML.', topics:['doctype'] },
   { type:'click', q:'Click the tag that sets the text shown on the browser **tab**.',
     code:`<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
   <title>Notes</title>
 </head>
 <body>
   <p>Hello</p>
 </body>
 </html>`, answer:'title',
-    why:'`<title>` (inside `<head>`) is used for the tab, bookmarks and search results. It is never drawn in the page.', topics:['title','head'] },
-  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<meta>`?',
+    why:'`<title>` (inside `<head>`) is the name of the page on the tab. It is not drawn in the page itself.', topics:['title','head'] },
+  { type:'click', q:'Click the **attribute** that tells the browser which character set (letters, accents, emoji) the page uses.',
+    code:`<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Bakery">
+  <title>Bakery</title>
+</head>`, answer:'@charset',
+    why:'`charset="UTF-8"` makes letters, accents and emoji show correctly.', topics:['meta-charset'] },
+  { type:'choice', q:'What does `<meta charset="UTF-8">` do?',
+    options:['Lets the page show all kinds of letters, accents and emoji correctly','Changes the text colour','Adds a heading','Sets the page title'], answer:0,
+    why:'UTF-8 is the standard text encoding. Without it, special characters can turn into garbage.', topics:['meta-charset'] },
+  { type:'choice', q:'The viewport meta tag makes the page look right on…',
+    options:['phone screens','printers','old TVs','search engines'], answer:0,
+    why:'`<meta name="viewport" content="width=device-width, initial-scale=1">` tells phones to use their real screen width.', topics:['meta-viewport'] },
+  { type:'click', q:'Click the tag that makes the page fit **phone screens**.',
+    code:`<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Fresh bread, baked daily">
+  <title>Bakery</title>
+</head>`, answer:'meta:2',
+    why:'The second meta tag has `name="viewport"`. The others are about encoding and description.', topics:['meta-viewport'] },
+  { type:'choice', q:'What is `<meta name="description" content="…">` for?',
+    options:['A short summary that search engines can show; it is not displayed on the page','A big heading at the top of the page','The text on the browser tab','A button'], answer:0,
+    why:'Search engines may show the description under your link in the results.', topics:['meta-description'] },
+  { type:'render', q:'What does the user **see** in the page?', h:100,
+    code:`<head>
+  <title>Cats</title>
+  <meta name="description" content="All about cats">
+</head>
+<body>
+  <p>Meow</p>
+</body>`,
+    wrong:['<p>Cats</p><p>Meow</p>','<h1>Cats</h1><p>All about cats</p><p>Meow</p>','<p>Meow</p><p>All about cats</p>'],
+    why:'Only the body is drawn. The title goes to the tab and the description to search engines.', topics:['title','meta-description','head','body'] },
+  { type:'choice', q:'What does this line do?',
+    code:`<link rel="stylesheet" href="style.css">`,
+    options:['Connects a CSS file (the page’s looks)','Shows a clickable link on the page','Draws a picture','Nothing'], answer:0,
+    why:'`<link rel="stylesheet">` loads a CSS file. It has no closing tag and sits in `<head>`.', topics:['link'] },
+  { type:'click', q:'Click the tag that connects a **CSS file**.',
+    code:`<head>
+  <title>Docs</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js"><\/script>
+</head>`, answer:'link',
+    why:'`<link>` brings in CSS; `<script>` brings in JavaScript.', topics:['link','head'] },
+  { type:'choice', q:'What does this line do?',
+    code:`<script src="app.js"><\/script>`,
+    options:['Loads and runs the JavaScript file app.js','Shows the text “app.js”','Makes a link to app.js','Sets the title'], answer:0,
+    why:'`<script src="…">` runs a JavaScript file. It needs a closing tag even when empty.', topics:['script'] },
+  { type:'click', q:'Click the tag that connects a **JavaScript** file.',
+    code:`<head>
+  <title>Tool</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js"><\/script>
+</head>`, answer:'script',
+    why:'`<script>` is for JavaScript.', topics:['script','head'] },
+  { type:'bug', q:'Spot the bug: something is missing from the first line. Click it.',
+    code:`<html>
+<head>
+  <title>Old</title>
+</head>
+<body>
+  <p>Hi</p>
+</body>
+</html>`, answer:[1],
+    why:'The very first line should be `<!DOCTYPE html>`.', topics:['doctype'] },
+  { type:'parent', q:'Which element directly contains the highlighted `<meta>`?',
     code:`<!DOCTYPE html>
 <html>
 <head>
@@ -103,121 +183,7 @@ const COURSE = {
   <p>Hello</p>
 </body>
 </html>`, target:'meta:1', options:['`<html>`','`<head>`','`<body>`','`<title>`'], answer:1,
-    why:'The `<meta>` sits between `<head>` and `</head>`, so `<head>` is its direct parent.', topics:['meta-charset','head'] },
-  { type:'choice', q:'What is `<!DOCTYPE html>`?',
-    options:['An element that wraps the whole page','A declaration that tells the browser to use modern standards mode (it is not an element)','A comment that browsers ignore','A tag that sets the page title'], answer:1,
-    why:'It must be the first line. Without it, browsers fall back to “quirks mode”, which mimics 1990s behaviour.', topics:['doctype'] },
-  { type:'click', q:'Click the tag that makes the page scale properly on **phone screens**.',
-    code:`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Fresh bread, baked daily">
-  <title>Bakery</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="app.js"><\/script>
-</head>
-<body>
-  <h1>Bakery</h1>
-</body>
-</html>`, answer:'meta:2',
-    why:'The viewport meta tag controls how mobile browsers size the layout viewport. The other two metas are about encoding and search snippets.', topics:['meta-viewport'] },
-  { type:'bug', q:'Spot the bug: click the line that is in the wrong place.',
-    code:`<!DOCTYPE html>
-<html>
-<head>
-  <title>Shop</title>
-</head>
-<body>
-  <meta charset="UTF-8">
-  <h1>Shop</h1>
-</body>
-</html>`, answer:[7],
-    why:'`<meta charset>` is metadata and belongs in `<head>`, ideally first, so the browser knows the encoding before it reads any text.', topics:['meta-charset','body'] },
-  { type:'render', q:'What does the user **see** in the page?', h:100,
-    code:`<head>
-  <title>Cats</title>
-  <meta name="description" content="All about cats">
-</head>
-<body>
-  <p>Meow</p>
-</body>`,
-    wrong:['<p>Cats</p><p>Meow</p>','<p>Cats</p><p>All about cats</p><p>Meow</p>','<p>Meow</p><p>All about cats</p>'],
-    why:'Only the body is drawn. The title goes to the tab and the description to search engines.', topics:['title','meta-description','head'] },
-  { type:'choice', q:'Where is `<meta name="description" content="…">` used?',
-    options:['Shown as a subtitle under the main heading','Used by search engines as the result snippet; it is not shown on the page','Shown in the browser tab','It sets the page language'], answer:1,
-    why:'The description is metadata for search engines and link previews, not visible page content.', topics:['meta-description'] },
-  { type:'happens', q:'What does the browser do when it reads this line?',
-    code:`<link rel="stylesheet" href="style.css">`,
-    options:['Draws a clickable link on the page','Downloads style.css and applies its rules to the page','Runs style.css as JavaScript','Nothing, it is only a comment'], answer:1,
-    why:'`<link rel="stylesheet">` relates an external stylesheet to the page. It is a void element and lives in `<head>`.', topics:['link'] },
-  { type:'happens', q:'What does the browser do when it reaches this line?',
-    code:`<script src="app.js"><\/script>`,
-    options:['Prints the text “app.js”','Downloads app.js and runs it as JavaScript','Draws a hyperlink to app.js','Uses app.js as the page title'], answer:1,
-    why:'`<script src="…">` loads and executes a JavaScript file. The closing tag is required even when it is empty.', topics:['script'] },
-  { type:'tree', q:'Pick the correct tree for this page (ignore whitespace-only text).',
-    code:`<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Hi</title>
-</head>
-<body>
-  <p>Hello</p>
-</body>
-</html>`,
-    options:['html(head(meta,title(#text)),body(p(#text)))','html(head(meta),title(#text),body(p(#text)))','html(head(meta(title(#text))),body(p(#text)))','html(head(meta,title),body(p),#text)'], answer:0,
-    why:'`<html>` has two children (head, body). `<meta>` is void, so it has no children; `<title>` and `<p>` each contain one text node.', topics:['html','head','body'] },
-  { type:'bug', q:'Spot the bug: click the line that breaks the document structure.',
-    code:`<!DOCTYPE html>
-<html>
-<body>
-  <p>Hi</p>
-</body>
-<head>
-  <title>Late</title>
-</head>
-</html>`, answer:[6],
-    why:'`<head>` must come before `<body>`. The browser reads top-down, so metadata has to be declared first.', topics:['head','html'] },
-  { type:'bug', q:'Spot the bug: click the offending line.',
-    code:`<html>
-<head>
-  <title>Old</title>
-</head>
-<body>
-  <p>Hi</p>
-</body>
-</html>`, answer:[1],
-    why:'The first line should be `<!DOCTYPE html>`. Without it the page renders in quirks mode.', topics:['doctype'] },
-  { type:'click', q:'Click the element that loads **JavaScript**.',
-    code:`<head>
-  <meta charset="UTF-8">
-  <title>Tool</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="app.js"><\/script>
-</head>`, answer:'script',
-    why:'`<script>` runs code. `<link>` brings in a stylesheet instead.', topics:['script','head'] },
-  { type:'choice', q:'What does `content="width=device-width"` in the viewport meta do?',
-    options:['Makes the page exactly 100px wide','Makes the layout width follow the device’s screen width','Sets the width of the first image','Disables scrolling'], answer:1,
-    why:'It tells mobile browsers not to pretend to be a wide desktop screen, so responsive layouts work.', topics:['meta-viewport'] },
-  { type:'click', q:'Click the **attribute** that declares the text encoding.',
-    code:`<head>
-  <meta charset="UTF-8">
-  <meta name="description" content="Bakery">
-  <title>Bakery</title>
-</head>`, answer:'@charset',
-    why:'`charset="UTF-8"` says how bytes are decoded into characters, so accents and emoji display correctly.', topics:['meta-charset'] },
-  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<link>`?',
-    code:`<html>
-<head>
-  <title>Docs</title>
-  <link rel="stylesheet" href="docs.css">
-</head>
-<body>
-  <p>Hi</p>
-</body>
-</html>`, target:'link:1', options:['`<html>`','`<body>`','`<head>`','`<title>`'], answer:2,
-    why:'`<link>` is a head-only element; its parent here is `<head>`.', topics:['link','head'] }
+    why:'The `<meta>` sits between `<head>` and `</head>`.', topics:['meta-charset','head','html'] }
  ]
 },
 
@@ -1731,6 +1697,9 @@ pre.tree{margin:0;font:13px/1.45 var(--mono);white-space:pre;overflow:auto}
 .fb p{margin:.3em 0 .8em}
 .fb .t{font-weight:700}
 .fb.ok .t{color:var(--ok)}.fb.bad .t{color:var(--bad)}
+.fb.skip{background:var(--warn-bg);border-color:var(--warn)}
+.fb.skip .t{color:var(--warn)}
+.skiprow{display:flex;justify-content:flex-end;margin-top:6px}
 .fb.ok,.fb.bad{outline:0}
 .fb *{background:none}
 .result{text-align:center;display:grid;gap:10px;justify-items:center;padding:30px 20px}
@@ -2036,7 +2005,7 @@ function updateStats() {
   $('#gtxt').textContent = passed + '/' + COURSE.levels.length + ' levels';
   $('#gscore').textContent = total;
 }
-const isUnlocked = i => i === 0 || !!(store.levels[COURSE.levels[i - 1].id] || {}).passed;
+const isUnlocked = i => i === 0 || !!store.openAll || !!(store.levels[COURSE.levels[i - 1].id] || {}).passed;
 
 /* ================= tabs ================= */
 let S = { mode: 'map' };
@@ -2054,7 +2023,7 @@ function showLevels() {
   setTab('learn');
   const v = $('#v-learn'); v.innerHTML = '';
   v.append(el('h2', '', 'Learn to read HTML'));
-  v.append(el('p', 'lead', 'Ten short levels. Each one opens with a lesson, then a quiz of mixed exercises. Finish a level with at least 70% and no lives lost to unlock the next one. You lose a life on each wrong answer (3 per level).'));
+  v.append(el('p', 'lead', 'Ten short levels. Each one opens with a lesson, then a quiz of mixed exercises. Finish a level with at least 70% to unlock the next one. You lose a life on each wrong answer (3 per level). Stuck? Press Skip on any question to see the answer, or unlock all levels below.'));
   const g = el('div', 'grid');
   COURSE.levels.forEach((L, i) => {
     const r = store.levels[L.id] || {};
@@ -2078,7 +2047,9 @@ function showLevels() {
     if (!armed) { armed = true; rs.textContent = 'Click again to erase all progress'; setTimeout(() => { armed = false; rs.textContent = 'Reset progress'; }, 3000); return; }
     store.levels = {}; store.wrong = []; save(); updateStats(); showLevels();
   };
-  row.append(rv, rs);
+  const oa = el('button', 'btn', store.openAll ? 'Lock levels again' : 'Skip ahead: unlock all levels');
+  oa.onclick = () => { store.openAll = !store.openAll; save(); showLevels(); };
+  row.append(rv, oa, rs);
   v.append(row);
   updateStats();
 }
@@ -2192,6 +2163,10 @@ function showQuestion() {
   card.append(el('p', 'qtext', fmt(q.q)));
   const body = el('div', 'qbody');
   card.append(body);
+  S.reveal = null;
+  S.skipBtn = el('button', 'btn ghost', 'Skip: show me the answer');
+  S.skipBtn.onclick = () => skip(q);
+  const sr = el('div', 'skiprow'); sr.append(S.skipBtn); card.append(sr);
   S.fb = el('div'); card.append(S.fb);
   v.append(top, prog, card);
   updateHud();
@@ -2201,6 +2176,7 @@ function showQuestion() {
 function finish(q, ok) {
   if (S.answered) return;
   S.answered = true;
+  S.skipBtn.hidden = true;
   let msg = '';
   if (ok) {
     S.streak++; S.maxStreak = Math.max(S.maxStreak, S.streak); S.correct++;
@@ -2226,6 +2202,23 @@ function finish(q, ok) {
   nx.focus({ preventScroll: true });
   fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
+function skip(q) {
+  if (S.answered) return;
+  S.answered = true; S.skipBtn.hidden = true;
+  S.skipped = (S.skipped || 0) + 1; S.streak = 0;
+  if (S.reveal) S.reveal();
+  if (!store.wrong.includes(q.id)) store.wrong.push(q.id);
+  save(); updateHud();
+  const out = S.lives <= 0 || S.qi + 1 >= S.qs.length;
+  S.fb.innerHTML = '';
+  const fb = el('div', 'fb skip');
+  fb.innerHTML = '<div class="t">Skipped <span class="muted" style="font-weight:500">· the right answer is highlighted above, no life lost</span></div><p>' + fmt(q.why) + '</p>';
+  const nx = el('button', 'btn primary', out ? 'See result →' : 'Next question →');
+  nx.onclick = () => { S.qi++; if (out) showResult(); else showQuestion(); };
+  fb.append(nx); S.fb.append(fb);
+  nx.focus({ preventScroll: true });
+  fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
 function showResult() {
   const n = S.qs.length, answered = S.qi, pct = Math.round(S.correct / n * 100);
   const outOfLives = S.lives <= 0;
@@ -2242,7 +2235,7 @@ function showResult() {
   const box = el('div', 'card result ' + (S.review ? '' : passed ? 'pass' : 'fail'));
   const title = S.review ? 'Review finished' : passed ? (S.L.id === 'L10' ? 'Course complete! 🎉' : 'Level passed!') : outOfLives ? 'Out of lives' : 'Not quite 70% yet';
   box.innerHTML = '<h2>' + title + '</h2><div class="big">' + (outOfLives ? S.correct + '/' + answered : pct + '%') + '</div>' +
-    '<div class="stat3"><span><b>' + S.correct + '/' + (outOfLives ? answered : n) + '</b>correct</span><span><b>' + S.score + '</b>points</span><span><b>' + S.maxStreak + '</b>best streak</span></div>' +
+    '<div class="stat3"><span><b>' + S.correct + '/' + (outOfLives ? answered : n) + '</b>correct</span><span><b>' + S.score + '</b>points</span>' + (S.skipped ? '<span><b>' + S.skipped + '</b>skipped</span>' : '') + '<span><b>' + S.maxStreak + '</b>best streak</span></div>' +
     '<p class="muted">' + (S.review ? 'Questions you got right are removed from your review list.' :
       passed ? 'The next level is unlocked.' : outOfLives ? 'Three wrong answers end the attempt. Re-read the lesson and try again.' : 'You need at least 70% to unlock the next level.') + '</p>';
   const row = el('div', 'row'); row.style.justifyContent = 'center';
@@ -2276,6 +2269,7 @@ function choices(opts, ans, render, done, keep) {
     };
     bs.push(b); box.append(b);
   });
+  S.reveal = () => bs.forEach((x, j) => { if (list[j].i === ans) x.classList.add('ok'); });
   return box;
 }
 BUILD.choice = BUILD.happens = BUILD.versus = (q, body, done) => {
@@ -2315,6 +2309,7 @@ BUILD.render = (q, body, done) => {
     cards.push(c); grid.append(c);
   });
   body.append(grid);
+  S.reveal = () => cards.forEach((cc, j) => { if (opts[j].ok) cc.classList.add('ok'); });
 };
 BUILD.click = (q, body, done) => {
   const answers = [].concat(q.answer).map(normSel);
@@ -2342,6 +2337,7 @@ BUILD.click = (q, body, done) => {
     if (!ok) answers.forEach(a => $$('[' + (wantAttr ? 'data-asel' : 'data-sel') + '="' + a + '"]', box).forEach(x => x.classList.add('ok')));
     done(ok);
   };
+  S.reveal = () => answers.forEach(a => $$('[' + (wantAttr ? 'data-asel' : 'data-sel') + '="' + a + '"]', box).forEach(x => x.classList.add('ok')));
   body.append(el('div', 'sub', wantAttr ? 'Click directly on the attribute.' : 'Click on the tag you think is right (any part of it).'));
 };
 BUILD.bug = (q, body, done) => {
@@ -2357,6 +2353,7 @@ BUILD.bug = (q, body, done) => {
     if (!ok) answers.forEach(a => { const x = $('.cl[data-line="' + a + '"]', box); if (x) x.classList.add('ok'); });
     done(ok);
   };
+  S.reveal = () => answers.forEach(a => { const x = $('.cl[data-line="' + a + '"]', box); if (x) x.classList.add('ok'); });
   body.append(el('div', 'sub', 'Click a whole line.'));
 };
 BUILD.match = (q, body, done) => {
@@ -2372,6 +2369,10 @@ BUILD.match = (q, body, done) => {
   });
   Ls.forEach(d => left.append(d)); Rs.forEach(d => right.append(d));
   wrap.append(left, right); body.append(wrap, status);
+  S.reveal = () => Ls.forEach((l, k) => {
+    const r = Rs.find(x => x._i === l._i);
+    [l, r].forEach(x => { if (!x.classList.contains('done')) { x.classList.add('done'); x.append(el('span', 'mnum', String(k + 1))); } });
+  });
   let sel = null, flawed = false, remaining = pairs.length;
   Ls.forEach(d => d.onclick = () => {
     if (S.answered || d.classList.contains('done')) return;
@@ -2399,8 +2400,8 @@ BUILD.form = (q, body, done) => {
   const form = '<form action="#">\n' + q.html.split('\n').map(l => '  ' + l).join('\n') + '\n  <button type="submit">Submit</button>\n</form>';
   body.append(codeBox(form));
   const live = el('div', 'live'); live.hidden = true;
-  const c = choices(['Blocked by the browser', 'Submits successfully'], q.answer === 'blocked' ? 0 : 1, esc, ok => {
-    done(ok);
+  const showLive = () => {
+    if (!live.hidden) return;
     live.hidden = false;
     const f = frame(form + FORM_HELPER, 110, 'allow-scripts allow-forms');
     const st = el('div', 'lstatus', 'Press Submit in the form above to see what really happens.');
@@ -2410,7 +2411,9 @@ BUILD.form = (q, body, done) => {
       st.className = 'lstatus ' + (e.data.fs === 'submitted' ? 's1' : 's2');
       st.textContent = e.data.fs === 'submitted' ? '✔ The browser accepted the form and would send it now.' : '✖ The browser blocked the submission and showed a validation message.';
     });
-  }, true);
+  };
+  const c = choices(['Blocked by the browser', 'Submits successfully'], q.answer === 'blocked' ? 0 : 1, esc, ok => { done(ok); showLive(); }, true);
+  const r = S.reveal; S.reveal = () => { r(); showLive(); };
   body.append(c, live);
 };
 // Keyboard shortcuts: A-D or 1-4 pick the n-th option
