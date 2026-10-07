@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Read HTML: an interactive course</title>
+<script id="course-data">
+/* ====================================================================
+   COURSE DATA: all lessons and questions live here. Add more freely.
+
+   Text helpers (used in every text field):
+     `code`  -> inline <code>      **bold** -> bold
+     Use ’ (typographic apostrophe) inside single-quoted JS strings.
+     Inside code samples write a closing script tag as <\/script> (backslash-slash).
+
+   Level:  { id, title, blurb, intro:[paragraphs; "- " starts a bullet],
+             example:{code, notes:{'tag@attr':'text'}, h:previewHeight},
+             example2:{title, code}   (optional second annotated example)
+             demo:'request'           (optional interactive widget)
+             shared:'code'            (optional, referenced by code:'@shared')
+             topicList:[ids]          (used by the checker, see below)
+             questions:[...] }
+
+   Question types (every question needs `why` = 1-2 sentence explanation
+   and `topics`:[ids]; an optional `id` keeps "Review mistakes" stable):
+
+   render : { type:'render', q, code, wrong:[html,html,...], h }
+            The preview of `code` is the right answer; `wrong` are decoys.
+   click  : { type:'click', q, code, answer:'a:2' }
+            answer = tag name + occurrence ('li:3'), closing tag ('/li:1')
+            or attribute ('@href:2'). An array lists several accepted answers.
+   parent : { type:'parent', q, code, target:'li:2', options:[...], answer:index }
+   bug    : { type:'bug', q, code, answer:[lineNumbers] }
+   match  : { type:'match', q, pairs:[{code}], h }   (previews are rendered from code)
+   tree   : { type:'tree', q, code, options:['html(head,body(p))',...], answer:index }
+            tree notation: name(child,child(grandchild)), #text for text nodes
+   happens / versus / choice :
+            { type:'happens', q, code?, options:[...], answer:index }
+   form   : { type:'form', q, html:'<input ...>', answer:'blocked'|'submits' }
+            html = the controls only; the <form> and Submit button are added.
+
+   Checker: open this file with ?check at the end of the URL
+   (read-html.html?check) and look at the browser console, or run
+   checkCourse() there. It reports missing fields, bad click targets and
+   topics that have fewer than 2 questions.
+   ==================================================================== */
+const COURSE = {
+ passMark: 0.7,
+ lives: 3,
+ levels: [
+
+/* ---------------------------------------------------------------- L1 */
+{
+ id:'L1', title:'Document structure', blurb:'DOCTYPE, html, head, body, meta, title, link, script',
+ topicList:['doctype','html','head','body','meta-charset','meta-viewport','meta-description','title','link','script'],
+ intro:[
+  'An HTML file is a **tree of elements**. An element is written `<name attr="value">content</name>`. Elements with no content (`<meta>`, `<link>`, `<br>`) are **void**: they have no closing tag.',
+  '`<!DOCTYPE html>` is not an element. It tells the browser to use modern standards mode. Then `<html>` is the root and has exactly two children:',
+  '- `<head>`: metadata, not drawn on the page.',
+  '- `<body>`: everything the user actually sees.',
+  'Typical head contents: `<meta charset>` (text encoding), `<meta name="viewport">` (mobile scaling), `<meta name="description">` (search-engine snippet), `<title>` (tab title), `<link>` (relates another file, usually CSS) and `<script>` (JavaScript). Python analogy: head ≈ imports and config, body ≈ `main()`.'
+ ],
+ example:{ h:90, code:`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A tiny demo page">
+  <title>My Page</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js"><\/script>
+</head>
+<body>
+  <h1>Hello</h1>
+</body>
+</html>`, notes:{
+   'meta@name':'What kind of metadata this tag carries: `viewport`, `description`, ...',
+   'meta@content':'The value of the metadata named by `name`.' } },
+ questions:[
+  { type:'choice', q:'Which element contains everything the user **sees** in the browser window?',
+    options:['`<html>`','`<head>`','`<body>`','`<title>`'], answer:2,
+    why:'`<body>` holds the visible content. `<head>` is metadata and `<html>` just wraps both.', topics:['body'] },
+  { type:'click', q:'Click the tag that sets the text shown on the browser **tab**.',
+    code:`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Notes</title>
+</head>
+<body>
+  <p>Hello</p>
+</body>
+</html>`, answer:'title',
+    why:'`<title>` (inside `<head>`) is used for the tab, bookmarks and search results. It is never drawn in the page.', topics:['title','head'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<meta>`?',
+    code:`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Notes</title>
+</head>
+<body>
+  <p>Hello</p>
+</body>
+</html>`, target:'meta:1', options:['`<html>`','`<head>`','`<body>`','`<title>`'], answer:1,
+    why:'The `<meta>` sits between `<head>` and `</head>`, so `<head>` is its direct parent.', topics:['meta-charset','head'] },
+  { type:'choice', q:'What is `<!DOCTYPE html>`?',
+    options:['An element that wraps the whole page','A declaration that tells the browser to use modern standards mode (it is not an element)','A comment that browsers ignore','A tag that sets the page title'], answer:1,
+    why:'It must be the first line. Without it, browsers fall back to “quirks mode”, which mimics 1990s behaviour.', topics:['doctype'] },
+  { type:'click', q:'Click the tag that makes the page scale properly on **phone screens**.',
+    code:`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Fresh bread, baked daily">
+  <title>Bakery</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js"><\/script>
+</head>
+<body>
+  <h1>Bakery</h1>
+</body>
+</html>`, answer:'meta:2',
+    why:'The viewport meta tag controls how mobile browsers size the layout viewport. The other two metas are about encoding and search snippets.', topics:['meta-viewport'] },
+  { type:'bug', q:'Spot the bug: click the line that is in the wrong place.',
+    code:`<!DOCTYPE html>
+<html>
+<head>
+  <title>Shop</title>
+</head>
+<body>
+  <meta charset="UTF-8">
+  <h1>Shop</h1>
+</body>
+</html>`, answer:[7],
+    why:'`<meta charset>` is metadata and belongs in `<head>`, ideally first, so the browser knows the encoding before it reads any text.', topics:['meta-charset','body'] },
+  { type:'render', q:'What does the user **see** in the page?', h:100,
+    code:`<head>
+  <title>Cats</title>
+  <meta name="description" content="All about cats">
+</head>
+<body>
+  <p>Meow</p>
+</body>`,
+    wrong:['<p>Cats</p><p>Meow</p>','<p>Cats</p><p>All about cats</p><p>Meow</p>','<p>Meow</p><p>All about cats</p>'],
+    why:'Only the body is drawn. The title goes to the tab and the description to search engines.', topics:['title','meta-description','head'] },
+  { type:'choice', q:'Where is `<meta name="description" content="…">` used?',
+    options:['Shown as a subtitle under the main heading','Used by search engines as the result snippet; it is not shown on the page','Shown in the browser tab','It sets the page language'], answer:1,
+    why:'The description is metadata for search engines and link previews, not visible page content.', topics:['meta-description'] },
+  { type:'happens', q:'What does the browser do when it reads this line?',
+    code:`<link rel="stylesheet" href="style.css">`,
+    options:['Draws a clickable link on the page','Downloads style.css and applies its rules to the page','Runs style.css as JavaScript','Nothing, it is only a comment'], answer:1,
+    why:'`<link rel="stylesheet">` relates an external stylesheet to the page. It is a void element and lives in `<head>`.', topics:['link'] },
+  { type:'happens', q:'What does the browser do when it reaches this line?',
+    code:`<script src="app.js"><\/script>`,
+    options:['Prints the text “app.js”','Downloads app.js and runs it as JavaScript','Draws a hyperlink to app.js','Uses app.js as the page title'], answer:1,
+    why:'`<script src="…">` loads and executes a JavaScript file. The closing tag is required even when it is empty.', topics:['script'] },
+  { type:'tree', q:'Pick the correct tree for this page (ignore whitespace-only text).',
+    code:`<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Hi</title>
+</head>
+<body>
+  <p>Hello</p>
+</body>
+</html>`,
+    options:['html(head(meta,title(#text)),body(p(#text)))','html(head(meta),title(#text),body(p(#text)))','html(head(meta(title(#text))),body(p(#text)))','html(head(meta,title),body(p),#text)'], answer:0,
+    why:'`<html>` has two children (head, body). `<meta>` is void, so it has no children; `<title>` and `<p>` each contain one text node.', topics:['html','head','body'] },
+  { type:'bug', q:'Spot the bug: click the line that breaks the document structure.',
+    code:`<!DOCTYPE html>
+<html>
+<body>
+  <p>Hi</p>
+</body>
+<head>
+  <title>Late</title>
+</head>
+</html>`, answer:[6],
+    why:'`<head>` must come before `<body>`. The browser reads top-down, so metadata has to be declared first.', topics:['head','html'] },
+  { type:'bug', q:'Spot the bug: click the offending line.',
+    code:`<html>
+<head>
+  <title>Old</title>
+</head>
+<body>
+  <p>Hi</p>
+</body>
+</html>`, answer:[1],
+    why:'The first line should be `<!DOCTYPE html>`. Without it the page renders in quirks mode.', topics:['doctype'] },
+  { type:'click', q:'Click the element that loads **JavaScript**.',
+    code:`<head>
+  <meta charset="UTF-8">
+  <title>Tool</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js"><\/script>
+</head>`, answer:'script',
+    why:'`<script>` runs code. `<link>` brings in a stylesheet instead.', topics:['script','head'] },
+  { type:'choice', q:'What does `content="width=device-width"` in the viewport meta do?',
+    options:['Makes the page exactly 100px wide','Makes the layout width follow the device’s screen width','Sets the width of the first image','Disables scrolling'], answer:1,
+    why:'It tells mobile browsers not to pretend to be a wide desktop screen, so responsive layouts work.', topics:['meta-viewport'] },
+  { type:'click', q:'Click the **attribute** that declares the text encoding.',
+    code:`<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Bakery">
+  <title>Bakery</title>
+</head>`, answer:'@charset',
+    why:'`charset="UTF-8"` says how bytes are decoded into characters, so accents and emoji display correctly.', topics:['meta-charset'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<link>`?',
+    code:`<html>
+<head>
+  <title>Docs</title>
+  <link rel="stylesheet" href="docs.css">
+</head>
+<body>
+  <p>Hi</p>
+</body>
+</html>`, target:'link:1', options:['`<html>`','`<body>`','`<head>`','`<title>`'], answer:2,
+    why:'`<link>` is a head-only element; its parent here is `<head>`.', topics:['link','head'] }
+ ]
+},
+
+/* ---------------------------------------------------------------- L2 */
+{
+ id:'L2', title:'Text elements', blurb:'Headings, p, br, hr, strong/b, em/i, span/div',
+ topicList:['h','p','br','hr','strong-b','em-i','span-div'],
+ intro:[
+  'Headings `<h1>`–`<h6>` form the page outline: `h1` is the main title, `h6` the least important. Use them for structure, not for font size.',
+  '`<p>` is a paragraph. Whitespace and newlines in the source collapse into single spaces. `<br>` forces a line break and `<hr>` draws a thematic break; both are void elements.',
+  'Two pairs look alike but mean different things. `<strong>` = important, `<b>` = bold just for looks. `<em>` = stressed emphasis, `<i>` = alternate voice (technical term, foreign phrase). Screen readers and search engines treat the semantic ones differently.',
+  '`<div>` is a **block** element (starts a new line, full width). `<span>` is **inline** (flows inside a line). Neither has meaning on its own; they are generic containers.'
+ ],
+ example:{ h:200, code:`<h1>Main title</h1>
+<h2>Section</h2>
+<p>This is <strong>very important</strong> and <em>stressed</em>.<br>
+   New line here. A <b>keyword</b> and an <i>Latin term</i>.</p>
+<hr>
+<div>A block <span>with an inline bit</span></div>
+<div>Another block</div>` },
+ questions:[
+  { type:'render', q:'What does the user see?', h:150,
+    code:`<h1>Title</h1>
+<h3>Sub</h3>
+<p>Text</p>`,
+    wrong:['<h3>Title</h3><h1>Sub</h1><p>Text</p>','<h1>Title</h1><h1>Sub</h1><p>Text</p>','<p>Title</p><p>Sub</p><p>Text</p>'],
+    why:'Browsers draw `h1` biggest and shrink with each level. `p` is plain body text.', topics:['h','p'] },
+  { type:'render', q:'Whitespace in the source: what does the user see?', h:90,
+    code:`<p>Hello        world
+
+     again</p>`,
+    wrong:['<p>Hello        world</p><p>again</p>','<pre>Hello        world\n\n     again</pre>','<p>Hello<br><br>world<br>again</p>'],
+    why:'HTML collapses runs of spaces and newlines into one space. Use `<br>` or a new `<p>` for real breaks.', topics:['p','br'] },
+  { type:'choice', q:'How is `<br>` different from starting a new `<p>`?',
+    options:['`<br>` breaks the line inside the same paragraph and has no closing tag','`<br>` starts a new paragraph with spacing and needs `</br>`','`<br>` draws a horizontal line','There is no difference'], answer:0,
+    why:'`<br>` is a void element that only breaks the line. A new `<p>` creates a new paragraph block with margins.', topics:['br','p'] },
+  { type:'versus', q:'`<strong>` and `<b>` both look bold. What is the real difference?',
+    options:['`<strong>` marks the content as important (semantic); `<b>` only draws attention visually','`<b>` is newer and replaces `<strong>`','`<strong>` is bolder than `<b>`','`<b>` is block-level and `<strong>` is inline'], answer:0,
+    why:'Meaning vs looks: assistive technology may stress `<strong>`; `<b>` is for things like keywords or product names with no extra importance.', topics:['strong-b'] },
+  { type:'click', q:'Click the tag that adds **stressed emphasis** (the way you stress a word when speaking).',
+    code:`<p>Never <em>ever</em> touch the <b>red</b> button, said the <i>Homo sapiens</i>.</p>`, answer:'em',
+    why:'`<em>` is emphasis that can change the meaning of a sentence. `<b>` and `<i>` are only stylistic offsets.', topics:['em-i'] },
+  { type:'versus', q:'You write the species name *Homo sapiens* in a sentence, with no stress intended. Best tag?',
+    options:['`<em>`','`<i>`','`<strong>`','`<span>`'], answer:1,
+    why:'`<i>` is for an alternate voice such as technical terms and foreign phrases. `<em>` would add vocal stress.', topics:['em-i'] },
+  { type:'render', q:'What does the user see?', h:140,
+    code:`<span>One</span><span>Two</span>
+<div>Three</div><div>Four</div>`,
+    wrong:['<div>One</div><div>Two</div><div>Three</div><div>Four</div>','<span>One</span><span>Two</span><span>Three</span><span>Four</span>','<div>One Two</div><span>Three</span><span>Four</span>'],
+    why:'Spans flow inline on the same line; each div is a block that starts on its own line.', topics:['span-div'] },
+  { type:'versus', q:'Which of these is **block-level** by default?',
+    options:['`<span>`','`<strong>`','`<div>`','`<em>`'], answer:2,
+    why:'`div` (like `p`, headings, `ul`) starts a new line. `span`, `strong` and `em` are inline.', topics:['span-div'] },
+  { type:'versus', q:'You want to colour **one word** inside a sentence without breaking the line. Best generic container?',
+    options:['`<div>`','`<span>`','`<p>`','`<br>`'], answer:1,
+    why:'`<span>` is the inline container. A `div` or `p` would break the line.', topics:['span-div'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<strong>`?',
+    code:`<div>
+  <p>Hi <strong>there</strong></p>
+</div>`, target:'strong:1', options:['`<div>`','`<p>`','`<body>`','`<span>`'], answer:1,
+    why:'`<strong>` is inside the `<p>`, which is inside the `<div>`. Direct parent = nearest enclosing element.', topics:['strong-b','p'] },
+  { type:'bug', q:'Spot the bug: click the line with the nesting error.',
+    code:`<h1>Welcome</h1>
+<p>This is <strong>very <em>important</strong></em>.</p>
+<hr>`, answer:[2],
+    why:'Elements must close in reverse order: `</em>` must come before `</strong>`. Tags can nest but not overlap.', topics:['strong-b','em-i'] },
+  { type:'happens', q:'What does `<hr>` produce?',
+    options:['A horizontal rule (thematic break) between blocks','A line break inside a paragraph','A heading','A red highlight'], answer:0,
+    why:'`hr` = “horizontal rule”, a void element that separates themes or sections.', topics:['hr'] },
+  { type:'bug', q:'Spot the bug: click the line with the invalid tag.',
+    code:`<h2>Poem</h2>
+<p>Roses are red,</br>
+violets are blue</p>
+<hr>`, answer:[2],
+    why:'`<br>` is void and has no closing tag. `</br>` is a stray end tag; browsers guess it means `<br>`, but it is invalid.', topics:['br'] },
+  { type:'tree', q:'Pick the correct tree.',
+    code:`<div><p>Hi <b>there</b></p><hr></div>`,
+    options:['div(p(#text,b(#text)),hr)','div(p(#text),b(#text),hr)','div(p(#text,b(#text),hr))','div(p,b,hr)'], answer:0,
+    why:'`b` is inside `p` (child of p), and `hr` is a sibling of `p`, both children of `div`.', topics:['span-div','p','strong-b'] },
+  { type:'match', q:'Match each snippet with what it renders.', h:70,
+    pairs:[{code:'<h1>Hi</h1>'},{code:'<p><strong>Hi</strong></p>'},{code:'<p><em>Hi</em></p>'},{code:'<p>Hi<br>there</p>'}],
+    why:'Heading = big and bold, strong = bold, em = italic, br = two lines.', topics:['h','strong-b','em-i','br'] },
+  { type:'choice', q:'In the outline of a page, which heading is the **least** important?',
+    options:['`<h1>`','`<h3>`','`<h6>`','`<h2>`'], answer:2,
+    why:'Levels run from `h1` (most important) to `h6` (least).', topics:['h'] },
+  { type:'click', q:'Click the element that draws a horizontal line between the two paragraphs.',
+    code:`<p>Intro</p>
+<hr>
+<p>Next section</p>`, answer:'hr',
+    why:'`<hr>` is a void element, so there is no closing tag to click.', topics:['hr','p'] },
+  { type:'click', q:'Click the tag that is bold **only for looks** (no extra importance).',
+    code:`<p>Take <strong>one</strong> pill, and keep the <b>Aspirin</b> box closed.</p>`, answer:'b',
+    why:'`<b>` just draws attention (product names, keywords). `<strong>` carries importance.', topics:['strong-b'] }
+ ]
+},
+
+/* ---------------------------------------------------------------- L3 */
+{
+ id:'L3', title:'Lists', blurb:'ul, ol, li, nested lists',
+ topicList:['ul','ol','li','nested'],
+ intro:[
+  '`<ul>` is an **unordered** list (bullets) and `<ol>` an **ordered** list (numbers). Every item is an `<li>`.',
+  'The only valid direct children of `<ul>` and `<ol>` are `<li>` elements. To nest a list, put the inner `<ul>`/`<ol>` **inside** an `<li>`, never directly inside the outer list.',
+  'Reading tip: find the `<li>`, look at its nearest list ancestor, and you know the bullet style and nesting depth. Indentation in the source is only for humans; the tree is defined by the tags.'
+ ],
+ example:{ h:200, code:`<ul>
+  <li>Fruits
+    <ul>
+      <li>Apple</li>
+      <li>Banana</li>
+    </ul>
+  </li>
+  <li>Steps
+    <ol>
+      <li>Boil water</li>
+      <li>Add pasta</li>
+    </ol>
+  </li>
+</ul>` },
+ questions:[
+  { type:'render', q:'What does the user see?', h:130,
+    code:`<ol>
+  <li>Wake up</li>
+  <li>Code</li>
+  <li>Sleep</li>
+</ol>`,
+    wrong:['<ul><li>Wake up</li><li>Code</li><li>Sleep</li></ul>','<div>Wake up</div><div>Code</div><div>Sleep</div>','<ol><li>Wake up</li><li>Code</li></ol>'],
+    why:'`<ol>` numbers its items automatically; `<ul>` would draw bullets.', topics:['ol','li'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<li>` (Apple)?',
+    code:`<ul>
+  <li>Fruits
+    <ul>
+      <li>Apple</li>
+      <li>Banana</li>
+    </ul>
+  </li>
+  <li>Veggies</li>
+</ul>`, target:'li:2', options:['the outer `<ul>`','the inner `<ul>`','the outer `<li>` (“Fruits”)','the `<li>` “Veggies”'], answer:1,
+    why:'Apple belongs to the inner list, so its direct parent is the inner `<ul>`. The “Fruits” `<li>` is an ancestor, not the parent.', topics:['li','nested'] },
+  { type:'click', q:'Click the opening tag of the **inner** list.',
+    code:`<ul>
+  <li>Fruits
+    <ul>
+      <li>Apple</li>
+      <li>Banana</li>
+    </ul>
+  </li>
+</ul>`, answer:'ul:2',
+    why:'Tags are counted in document order; the second `<ul>` start tag opens the nested list.', topics:['nested','ul'] },
+  { type:'bug', q:'Spot the bug: click the line that is not allowed inside the list.',
+    code:`<ul>
+  <li>Milk</li>
+  <p>Eggs</p>
+  <li>Bread</li>
+</ul>`, answer:[3],
+    why:'Only `<li>` may be a direct child of `<ul>`. Put the `<p>` inside an `<li>` or turn it into one.', topics:['ul','li'] },
+  { type:'bug', q:'Spot the bug: the nested list is placed wrongly. Click the opening line of the inner list.',
+    code:`<ul>
+  <li>Fruits</li>
+  <ul>
+    <li>Apple</li>
+  </ul>
+</ul>`, answer:[3],
+    why:'A nested list must live inside an `<li>`. Here the inner `<ul>` is a direct child of the outer `<ul>`.', topics:['nested','ul'] },
+  { type:'tree', q:'Pick the correct tree (ignore whitespace-only text).',
+    code:`<ul>
+  <li>Fruits
+    <ul>
+      <li>Apple</li>
+      <li>Banana</li>
+    </ul>
+  </li>
+  <li>Veggies</li>
+</ul>`,
+    options:['ul(li(#text,ul(li(#text),li(#text))),li(#text))','ul(li(#text),ul(li(#text),li(#text)),li(#text))','ul(li(#text,li(#text),li(#text)),li(#text))','ul(li(#text,ul(li,li)),li)'], answer:0,
+    why:'The inner `ul` is a child of the “Fruits” `li`, next to its text.', topics:['nested','li'] },
+  { type:'versus', q:'A recipe’s steps must be followed in order. Which list fits?',
+    options:['`<ul>`','`<ol>`','`<li>` alone','`<div>`'], answer:1,
+    why:'Order matters, so use the **o**rdered list. `<ul>` is for groups where order does not matter.', topics:['ol','ul'] },
+  { type:'happens', q:'How many `<li>` elements are in this snippet, counting nested ones?',
+    code:`<ul>
+  <li>Fruits
+    <ul>
+      <li>Apple</li>
+      <li>Banana</li>
+    </ul>
+  </li>
+  <li>Veggies</li>
+</ul>`, options:['3','4','5','2'], answer:1,
+    why:'Fruits, Apple, Banana and Veggies: 4 `li` elements, even though only two are direct children of the outer list.', topics:['li','nested'] },
+  { type:'render', q:'What does the user see?', h:170,
+    code:`<ul>
+  <li>Fruits
+    <ul>
+      <li>Apple</li>
+      <li>Banana</li>
+    </ul>
+  </li>
+  <li>Veggies</li>
+</ul>`,
+    wrong:['<ul><li>Fruits</li><li>Apple</li><li>Banana</li><li>Veggies</li></ul>','<ul><li>Fruits<ul><li>Apple</li><li>Banana</li><li>Veggies</li></ul></li></ul>','<ul><li>Fruits<ol><li>Apple</li><li>Banana</li></ol></li><li>Veggies</li></ul>'],
+    why:'Apple and Banana are indented under Fruits; Veggies is back at the top level.', topics:['nested','ul','ol'] },
+  { type:'match', q:'Match each snippet with what it renders.', h:110,
+    pairs:[{code:'<ul><li>A</li><li>B</li></ul>'},{code:'<ol><li>A</li><li>B</li></ol>'},{code:'<ul><li>A<ul><li>B</li></ul></li></ul>'}],
+    why:'Bullets, numbers, and a nested indent.', topics:['ul','ol','nested'] },
+  { type:'choice', q:'Which element is allowed as a **direct** child of `<ul>`?',
+    options:['`<li>`','`<p>`','`<ul>`','`<div>`'], answer:0,
+    why:'The list content model: `ul`/`ol` contain only `li` (plus script-supporting elements).', topics:['ul','li'] },
+  { type:'click', q:'Click the element that **numbers** its items.',
+    code:`<ul>
+  <li>Setup
+    <ol>
+      <li>Install</li>
+      <li>Configure</li>
+    </ol>
+  </li>
+</ul>`, answer:'ol',
+    why:'`ol` = ordered list. The outer `ul` just bullets “Setup”.', topics:['ol','nested'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<li>`?',
+    code:`<ol>
+  <li>Install</li>
+  <li>Run</li>
+</ol>`, target:'li:2', options:['`<ol>`','`<ul>`','`<body>`','another `<li>`'], answer:0,
+    why:'Both items sit directly in the `<ol>`.', topics:['li','ol'] }
+ ]
+},
+
+/* ---------------------------------------------------------------- L4 */
+{
+ id:'L4', title:'Links & media', blurb:'a, img, video, audio, source, iframe',
+ topicList:['a-href','a-target','a-rel','mailto','tel','anchor','img-src','img-alt','img-size','video','audio','source','iframe'],
+ intro:[
+  '`<a href="…">` is a hyperlink; the visible text sits between the tags. `target="_blank"` opens a new tab and `rel="noopener noreferrer"` protects the old page from it. Special schemes: `mailto:` opens an email draft, `tel:` starts a call, and `#id` jumps to the element with that `id` on the same page.',
+  '`<img src="…" alt="…" width="…" height="…">` is void. `src` is the file (relative or absolute path), `alt` is the text for screen readers and broken images, `width`/`height` reserve space.',
+  '`<video>` and `<audio>` take `controls` to show a player. Nested `<source>` elements offer alternative files; the browser picks the first it can play. Text inside is a fallback.',
+  '`<iframe src="…">` embeds another page inside a rectangle of this one.'
+ ],
+ example:{ h:300, code:`<a href="https://example.com" target="_blank" rel="noopener">External</a>
+<a href="mailto:hi@example.com">Email</a>
+<a href="tel:+15551234567">Call</a>
+<a href="#contact">Jump down</a>
+<img src="cat.jpg" alt="A sleeping cat" width="200" height="120">
+<video controls width="320">
+  <source src="clip.mp4" type="video/mp4">
+  <source src="clip.webm" type="video/webm">
+  Your browser has no video support.
+</video>
+<audio controls>
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+<iframe src="https://example.com/map" width="300" height="200"></iframe>
+<h2 id="contact">Contact</h2>` },
+ questions:[
+  { type:'happens', q:'The user clicks this link. What happens?',
+    code:`<a href="https://example.com" target="_blank" rel="noopener noreferrer">Docs</a>`,
+    options:['example.com opens in a new tab or window','example.com replaces the current page','The page downloads a file','The page scrolls to a section'], answer:0,
+    why:'`target="_blank"` asks for a new browsing context. Without `target`, links open in the same tab.', topics:['a-target','a-href'] },
+  { type:'happens', q:'The user clicks the link. What happens?',
+    code:`<a href="#faq">Jump to FAQ</a>
+...
+<h2 id="faq">FAQ</h2>`,
+    options:['It loads a different website called “faq”','The page scrolls to the element with id="faq" (no new page load)','It opens a new tab','It sends an email'], answer:1,
+    why:'A `#fragment` link targets an element’s `id` on the current page. Fragment jumps do not reload the page.', topics:['anchor'] },
+  { type:'happens', q:'The user clicks this link. What happens?',
+    code:`<a href="mailto:jo@example.com">Write to Jo</a>`,
+    options:['Opens the default mail app with a new message to jo@example.com','Navigates to a page called mailto','Downloads jo@example.com','Nothing happens'], answer:0,
+    why:'`mailto:` is a URL scheme handled by the mail client.', topics:['mailto'] },
+  { type:'happens', q:'On a phone, the user taps this link. What happens?',
+    code:`<a href="tel:+15551234567">Call us</a>`,
+    options:['The phone dialer opens with the number filled in','The page shows the digits as an image','It opens a website at tel.com','It texts the number'], answer:0,
+    why:'`tel:` hands the number to the phone’s dialer.', topics:['tel'] },
+  { type:'click', q:'Click the **attribute** that holds the link’s destination.',
+    code:`<a href="https://example.com" target="_blank">Go</a>`, answer:'@href',
+    why:'`href` = “hypertext reference”, the URL the link points to.', topics:['a-href'] },
+  { type:'click', q:'Click the attribute with the text used by screen readers and when the image cannot load.',
+    code:`<img src="logo.png" alt="Company logo" width="100" height="40">`, answer:'@alt',
+    why:'`alt` is the textual alternative. `src` is only the file location.', topics:['img-alt','img-src'] },
+  { type:'render', q:'What does the user see?', h:70,
+    code:`<p>Visit <a href="https://example.com" target="_blank">our site</a> today.</p>`,
+    wrong:['<p>Visit https://example.com today.</p>','<p>Visit <u>our site (new tab)</u> today.</p>','<p>Visit our site today.</p>'],
+    why:'The link text is what is shown (blue and underlined by default). The URL and the target stay hidden in attributes.', topics:['a-href','a-target'] },
+  { type:'versus', q:'Why add `rel="noopener noreferrer"` to a link that has `target="_blank"`?',
+    options:['It makes the link open faster','It stops the new page from controlling this one (`window.opener`) and hides the referrer','It makes the link blue','It is required or the link will not work'], answer:1,
+    why:'It is a security and privacy measure for links that open new tabs.', topics:['a-rel','a-target'] },
+  { type:'click', q:'Click the attribute that describes the **relationship** to the linked page.',
+    code:`<a href="https://example.com" target="_blank" rel="noopener noreferrer">Docs</a>`, answer:'@rel',
+    why:'`rel` (relationship) is also used on `<link rel="stylesheet">`.', topics:['a-rel'] },
+  { type:'bug', q:'Spot the bug: click the line with the accessibility problem.',
+    code:`<h1>Shop</h1>
+<img src="logo.png" width="100" height="40">
+<a href="cart.html">Cart</a>`, answer:[2],
+    why:'The `<img>` has no `alt`. Screen-reader users get nothing and broken images show no text.', topics:['img-alt','img-size'] },
+  { type:'bug', q:'Spot the bug: click the line where the link does not work.',
+    code:`<p>Read the
+<a src="docs.html">docs</a>
+for more.</p>`, answer:[2],
+    why:'A link needs `href`, not `src`. Without `href`, `<a>` is just unstyled text.', topics:['a-href'] },
+  { type:'bug', q:'Spot the bug: the user sees no play button. Click the faulty line.',
+    code:`<video width="320">
+  <source src="clip.mp4" type="video/mp4">
+</video>`, answer:[1],
+    why:'Without `controls` the browser draws no player UI. Add `controls` to the `<video>` tag.', topics:['video'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<source>`?',
+    code:`<video controls width="320">
+  <source src="clip.mp4" type="video/mp4">
+  <source src="clip.webm" type="video/webm">
+</video>
+<audio controls>
+  <source src="song.mp3" type="audio/mpeg">
+</audio>`, target:'source:3', options:['`<video>`','`<audio>`','`<body>`','`<iframe>`'], answer:1,
+    why:'The third `<source>` is the one inside `<audio>`.', topics:['source','audio'] },
+  { type:'happens', q:'The browser can play `.webm` but not `.mp4`. What does it do with this video?',
+    code:`<video controls>
+  <source src="clip.mp4" type="video/mp4">
+  <source src="clip.webm" type="video/webm">
+</video>`,
+    options:['Plays clip.webm: it skips sources it cannot play','Shows an error because the first source failed','Plays both at the same time','Ignores the video'], answer:0,
+    why:'Browsers walk the `<source>` list and use the first supported one.', topics:['source','video'] },
+  { type:'happens', q:'What is this element for?',
+    code:`<iframe src="https://example.com/map" width="300" height="200"></iframe>`,
+    options:['It embeds another web page inside a rectangle of this page','It creates a link','It imports CSS from that page','It plays a video'], answer:0,
+    why:'`iframe` = inline frame: a nested browsing context.', topics:['iframe'] },
+  { type:'click', q:'Click the element that **embeds** the map inside this page.',
+    code:`<h2>Find us</h2>
+<iframe src="https://maps.example.com/shop" width="300" height="200"></iframe>
+<p><a href="https://maps.example.com/shop">Open map</a></p>`, answer:'iframe',
+    why:'The `<a>` only links away; the `<iframe>` displays the map right here.', topics:['iframe','a-href'] },
+  { type:'happens', q:'Why write `width="200" height="100"` on an `<img>`?',
+    code:`<img src="cat.jpg" alt="A cat" width="200" height="100">`,
+    options:['The browser can reserve the space before the image loads, so the layout does not jump','It compresses the file','It is required or the image will not show','It sets the alt text'], answer:0,
+    why:'Declared dimensions prevent layout shift; the image also scales to them.', topics:['img-size'] },
+  { type:'click', q:'Click the element that `href="#contact"` jumps to.',
+    code:`<a href="#contact">Contact</a>
+<h2>News</h2>
+<h2 id="contact">Contact</h2>
+<p>Write to us.</p>`, answer:'h2:2',
+    why:'The target is the element whose `id` equals “contact”: the second `<h2>`.', topics:['anchor'] },
+  { type:'happens', q:'What does the part after `?` do in this link?',
+    code:`<a href="mailto:jo@example.com?subject=Hello">Mail Jo</a>`,
+    options:['It pre-fills the email subject with “Hello”','It is a comment','It adds Jo to the CC field','It makes the link open in a new tab'], answer:0,
+    why:'`mailto:` accepts query parameters such as `subject`.', topics:['mailto'] },
+  { type:'happens', q:'Where does the browser look for this image?',
+    code:`<img src="img/cat.jpg" alt="A cat">`,
+    options:['In the img folder next to this HTML file (relative path)','On the root of the C: drive','On example.com','In the head of the document'], answer:0,
+    why:'A path without a scheme or leading `/` is relative to the current document.', topics:['img-src'] },
+  { type:'versus', q:'Which link starts a phone call on mobile?',
+    options:['`mailto:+15551234567`','`tel:+15551234567`','`call:+15551234567`','`phone://15551234567`'], answer:1,
+    why:'`tel:` is the standard scheme.', topics:['tel'] },
+  { type:'versus', q:'Which tag shows a **sound** player when `controls` is present?',
+    options:['`<video>`','`<audio>`','`<img>`','`<iframe>`'], answer:1,
+    why:'`<audio>` plays sound; `<video>` plays moving pictures (with sound).', topics:['audio'] }
+ ]
+},
+
+/* ---------------------------------------------------------------- L5 */
+{
+ id:'L5', title:'Tables', blurb:'table, tr, td, th, thead/tbody/tfoot, colspan, rowspan, caption',
+ topicList:['table','tr','td-th','thead-tbody-tfoot','colspan','rowspan','caption'],
+ intro:[
+  'A `<table>` is a list of rows. Each `<tr>` is a row; each cell inside it is `<td>` (data) or `<th>` (header). Tables are for data, not layout.',
+  '`<thead>`, `<tbody>` and `<tfoot>` group rows into header, body and footer sections. They help styling, printing and accessibility. `<caption>` must be the first child of the table and gives it a title.',
+  '`colspan="n"` makes a cell stretch over n columns; `rowspan="n"` stretches it over n rows. Cells covered by a span are **not written** in the later rows, so a row can have fewer `<td>`s than the table has columns.',
+  'Reading tip: count columns from the widest row after adding the spans.'
+ ],
+ example:{ h:230, code:`<table>
+  <caption>Quarterly sales</caption>
+  <thead>
+    <tr><th>Quarter</th><th colspan="2">Sales</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Q1</td><td>10</td><td>12</td></tr>
+    <tr><td rowspan="2">Q2</td><td>15</td><td>18</td></tr>
+    <tr><td>20</td><td>22</td></tr>
+  </tbody>
+  <tfoot>
+    <tr><td>Total</td><td colspan="2">97</td></tr>
+  </tfoot>
+</table>` },
+ questions:[
+  { type:'render', q:'What does the user see?', h:100,
+    code:`<table>
+  <tr><th>Name</th><th>Age</th></tr>
+  <tr><td>Ann</td><td>31</td></tr>
+</table>`,
+    wrong:['<table><tr><th>Name</th><td>Ann</td></tr><tr><th>Age</th><td>31</td></tr></table>','<table><tr><td>Name</td><td>Age</td></tr><tr><td>Ann</td><td>31</td></tr></table>','<table><tr><th>Name</th><th>Age</th><th></th></tr><tr><td>Ann</td><td>31</td><td></td></tr></table>'],
+    why:'The first row has header cells (bold, centred); the second row has data cells. Two columns.', topics:['table','tr','td-th'] },
+  { type:'click', q:'Click a **header cell**.',
+    code:`<table>
+  <caption>Quarterly sales</caption>
+  <thead>
+    <tr><th>Quarter</th><th colspan="2">Sales</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Q1</td><td>10</td><td>12</td></tr>
+    <tr><td rowspan="2">Q2</td><td>15</td><td>18</td></tr>
+    <tr><td>20</td><td>22</td></tr>
+  </tbody>
+</table>`, answer:['th:1','th:2'],
+    why:'`<th>` is the header cell; every other cell here is a `<td>`.', topics:['td-th'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<td>`?',
+    code:`<table>
+  <thead>
+    <tr><th>Quarter</th><th>Sales</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Q1</td><td>10</td></tr>
+  </tbody>
+</table>`, target:'td:1', options:['`<tr>`','`<tbody>`','`<table>`','`<th>`'], answer:0,
+    why:'Cells always sit directly in a row (`<tr>`).', topics:['td-th','tr'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<tr>`?',
+    code:`<table>
+  <thead>
+    <tr><th>Item</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Pen</td></tr>
+    <tr><td>Ink</td></tr>
+  </tbody>
+</table>`, target:'tr:3', options:['`<table>`','`<thead>`','`<tbody>`','`<tfoot>`'], answer:2,
+    why:'The third `<tr>` (Ink) is inside `<tbody>`.', topics:['thead-tbody-tfoot','tr'] },
+  { type:'render', q:'What does the user see?', h:100,
+    code:`<table>
+  <tr><td colspan="2">Wide cell</td></tr>
+  <tr><td>A</td><td>B</td></tr>
+</table>`,
+    wrong:['<table><tr><td>Wide cell</td><td></td></tr><tr><td>A</td><td>B</td></tr></table>','<table><tr><td>A</td><td>B</td></tr><tr><td colspan="2">Wide cell</td></tr></table>','<table><tr><td>Wide cell</td></tr><tr><td>A</td></tr><tr><td>B</td></tr></table>'],
+    why:'`colspan="2"` stretches the first cell across both columns.', topics:['colspan'] },
+  { type:'render', q:'What does the user see?', h:110,
+    code:`<table>
+  <tr><td rowspan="2">Tall</td><td>A</td></tr>
+  <tr><td>B</td></tr>
+</table>`,
+    wrong:['<table><tr><td colspan="2">Tall</td></tr><tr><td>A</td><td>B</td></tr></table>','<table><tr><td>Tall</td><td>A</td></tr><tr><td></td><td>B</td></tr></table>','<table><tr><td>Tall</td></tr><tr><td>A</td></tr><tr><td>B</td></tr></table>'],
+    why:'`rowspan="2"` makes “Tall” fill two rows in the first column; the second row only needs one cell.', topics:['rowspan'] },
+  { type:'happens', q:'Where is `<caption>` placed in the code, and where is it drawn by default?',
+    options:['First child of `<table>`; drawn above the table','Last child of `<table>`; drawn below','Inside `<thead>`; drawn in the header row','Inside the first `<tr>`; drawn in the first cell'], answer:0,
+    why:'The caption is the table’s title, written right after `<table>` and shown on top by default.', topics:['caption'] },
+  { type:'bug', q:'Spot the bug: click the misplaced line.',
+    code:`<table>
+  <tr><td>A</td></tr>
+  <td>B</td>
+</table>`, answer:[3],
+    why:'A `<td>` must be inside a `<tr>`. Here the cell sits directly in the table.', topics:['td-th','tr'] },
+  { type:'bug', q:'Spot the bug: click the misplaced line.',
+    code:`<table>
+  <tr><th>Name</th></tr>
+  <caption>Users</caption>
+</table>`, answer:[3],
+    why:'`<caption>` has to be the first child of `<table>`.', topics:['caption'] },
+  { type:'bug', q:'Spot the bug: a section is never closed. Click the line where the next section starts too early.',
+    code:`<table>
+  <thead>
+    <tr><th>Item</th></tr>
+  <tbody>
+    <tr><td>Pen</td></tr>
+  </tbody>
+</table>`, answer:[4],
+    why:'`</thead>` is missing, so `<tbody>` starts while `<thead>` is still open.', topics:['thead-tbody-tfoot'] },
+  { type:'versus', q:'What is the main difference between `<th>` and `<td>`?',
+    options:['`<th>` is a header cell (bold and centred by default, announced as a header); `<td>` is a data cell','`<th>` is a whole row; `<td>` is a cell','`<td>` can span columns; `<th>` cannot','There is none; they are aliases'], answer:0,
+    why:'Both are cells. Header cells give meaning to the data cells around them.', topics:['td-th'] },
+  { type:'happens', q:'How many columns does this table have?',
+    code:`<table>
+  <tr><th colspan="3">Report</th></tr>
+  <tr><td>A</td><td>B</td><td>C</td></tr>
+</table>`, options:['1','2','3','4'], answer:2,
+    why:'The header cell spans three columns, and the second row has three cells.', topics:['colspan','table'] },
+  { type:'happens', q:'The last row of Q2’s group has only 2 cells but sits under 3 columns. Why does it still line up?',
+    code:`<tr><td rowspan="2">Q2</td><td>15</td><td>18</td></tr>
+<tr><td>20</td><td>22</td></tr>`,
+    options:['The `rowspan="2"` of “Q2” occupies the first column of the next row','The browser inserts an invisible third cell','The `<tfoot>` fills the gap','Tables allow ragged rows'], answer:0,
+    why:'A spanned cell reserves its slot in the following rows, so those rows omit it.', topics:['rowspan'] },
+  { type:'tree', q:'Pick the correct tree.',
+    code:`<table>
+  <caption>Pets</caption>
+  <thead><tr><th>Name</th></tr></thead>
+  <tbody><tr><td>Rex</td></tr></tbody>
+</table>`,
+    options:['table(caption(#text),thead(tr(th(#text))),tbody(tr(td(#text))))','table(caption,thead(th),tbody(td))','table(caption(#text),thead(tr(th(#text)),tbody(tr(td(#text)))))','table(caption(#text),tr(th(#text)),tr(td(#text)))'], answer:0,
+    why:'`thead` and `tbody` are siblings, each holding a row that holds a cell.', topics:['table','thead-tbody-tfoot','caption'] },
+  { type:'match', q:'Match each snippet with its render.', h:100,
+    pairs:[{code:'<table><tr><td colspan="2">X</td></tr><tr><td>A</td><td>B</td></tr></table>'},{code:'<table><tr><td rowspan="2">X</td><td>A</td></tr><tr><td>B</td></tr></table>'},{code:'<table><caption>Pets</caption><tr><td>Rex</td></tr></table>'},{code:'<table><tr><th>Head</th></tr><tr><td>Cell</td></tr></table>'}],
+    why:'Look for the spanning cell, the title above the table, and bold header text.', topics:['colspan','rowspan','caption','td-th'] },
+  { type:'versus', q:'Why group rows with `<thead>`, `<tbody>` and `<tfoot>`?',
+    options:['They add structure for styling, printing and assistive technology; the table works without them','They are mandatory or the table is invisible','They make the table sortable automatically','They add borders'], answer:0,
+    why:'The browser even adds an implied `<tbody>` if you omit it.', topics:['thead-tbody-tfoot'] },
+  { type:'click', q:'Click the element that holds the **totals row**.',
+    code:`<table>
+  <tbody>
+    <tr><td>Q1</td><td>10</td></tr>
+  </tbody>
+  <tfoot>
+    <tr><td>Total</td><td>10</td></tr>
+  </tfoot>
+</table>`, answer:'tfoot',
+    why:'`<tfoot>` is the footer group, drawn at the bottom.', topics:['thead-tbody-tfoot'] },
+  { type:'click', q:'Click the attribute that makes “Q2” stretch over two **rows**.',
+    code:`<tr><td rowspan="2">Q2</td><td>15</td><td>18</td></tr>
+<tr><td>20</td><td>22</td></tr>`, answer:'@rowspan',
+    why:'`rowspan` spans rows; `colspan` spans columns.', topics:['rowspan'] }
+ ]
+},
+
+/* ---------------------------------------------------------------- L6 */
+{
+ id:'L6', title:'Forms', blurb:'form, input types, label, select, textarea, buttons, GET vs POST',
+ topicList:['form-action','form-method','get-url','post','text','email','password','number','date','checkbox','radio','file','range','color','hidden','label-for','label-wrap','select-option','textarea','button-submit','button-reset','button-button'],
+ demo:'request',
+ intro:[
+  '`<form action="URL" method="get|post">` groups controls. **GET** puts the data into the URL (`/search?q=cats`): visible, bookmarkable, good for searches. **POST** puts it in the request body: the URL stays `/search`; use it for logins and changes. Try the demo below.',
+  'A control is only sent if it has a **`name`**. The key is the `name`, the value is what the user entered (or the `value` attribute).',
+  '`<input type="…">` changes the widget: `text`, `email`, `password`, `number`, `date`, `checkbox`, `radio` (same `name` = one group), `file`, `range`, `color`, `hidden`. `<label>` connects text to a control either with `for="id"` or by wrapping it. `<select>` + `<option value>`, `<textarea>…</textarea>`.',
+  'Buttons: `type="submit"` (default inside a form) sends, `type="reset"` restores initial values, `type="button"` does nothing by itself.'
+ ],
+ example:{ h:360, code:`<form action="/search" method="get">
+  <label for="q">Search:</label>
+  <input type="text" id="q" name="q">
+  <label>Email <input type="email" name="email"></label>
+  <input type="password" name="pw">
+  <input type="number" name="age">
+  <input type="date" name="dob">
+  <input type="checkbox" name="news" value="yes"> News
+  <input type="radio" name="size" value="s"> S
+  <input type="radio" name="size" value="m"> M
+  <input type="file" name="doc">
+  <input type="range" name="vol">
+  <input type="color" name="c">
+  <input type="hidden" name="token" value="abc123">
+  <select name="country">
+    <option value="il">Israel</option>
+    <option value="us">USA</option>
+  </select>
+  <textarea name="msg">Hi</textarea>
+  <button type="submit">Send</button>
+  <button type="reset">Clear</button>
+  <button type="button">Do nothing</button>
+</form>` },
+ questions:[
+  { type:'happens', q:'The user types `cats` and presses Go. Where does the browser navigate?',
+    code:`<form action="/search" method="get">
+  <input type="text" name="q">
+  <button type="submit">Go</button>
+</form>`,
+    options:['`/search?q=cats`','`/search`, with `cats` hidden in the request body','`/search#cats`','`/q=cats`'], answer:0,
+    why:'GET appends `name=value` pairs after `?`.', topics:['form-method','get-url','form-action','text'] },
+  { type:'happens', q:'Now the method is `post`. What changes when the user submits `cats`?',
+    code:`<form action="/search" method="post">
+  <input type="text" name="q">
+  <button type="submit">Go</button>
+</form>`,
+    options:['The URL stays `/search`; the data travels in the request body','The URL becomes `/search?q=cats` and the body is empty','The browser refuses to submit','The page is cached forever'], answer:0,
+    why:'POST keeps parameters out of the URL, so they do not end up in history or bookmarks.', topics:['post','form-method'] },
+  { type:'happens', q:'The user types `red shoes`. What is the final URL?',
+    code:`<form action="/shop" method="get">
+  <input type="text" name="item">
+  <input type="hidden" name="page" value="2">
+  <button type="submit">Find</button>
+</form>`,
+    options:['`/shop?item=red+shoes&page=2`','`/shop?item=red shoes,page=2`','`/shop?red+shoes&2`','`/shop#item=red+shoes&page=2`'], answer:0,
+    why:'Pairs are joined with `&`, spaces become `+` (or `%20`), and the hidden field is sent too.', topics:['get-url','hidden','text'] },
+  { type:'happens', q:'The user types `ann` and `secret`. What does the query string contain?',
+    code:`<form action="/login" method="get">
+  <input type="text" id="user">
+  <input type="password" name="pw">
+  <button type="submit">Log in</button>
+</form>`,
+    options:['`?user=ann&pw=secret`','`?pw=secret` only, because the text input has no `name`','Nothing at all','`?ann&secret`'], answer:1,
+    why:'Controls without `name` are not submitted; `id` is not enough. (Also: never send passwords with GET.)', topics:['form-method','text','password'] },
+  { type:'click', q:'Click the attribute that decides whether data goes into the URL or the body.',
+    code:`<form action="/search" method="get">
+  <input type="text" name="q">
+</form>`, answer:'@method', why:'`method` is `get` or `post`.', topics:['form-method'] },
+  { type:'click', q:'Click the attribute that says **where** the form is sent.',
+    code:`<form action="/search" method="get">
+  <input type="text" name="q">
+</form>`, answer:'@action', why:'`action` is the URL that receives the request.', topics:['form-action'] },
+  { type:'render', q:'What does the user see?', h:80,
+    code:`<form>
+  <input type="text">
+  <input type="checkbox"> Subscribe
+  <button type="submit">Send</button>
+</form>`,
+    wrong:['<form><input type="text"><input type="radio"> Subscribe<button type="submit">Send</button></form>','<form><textarea></textarea><input type="checkbox"> Subscribe<button type="submit">Send</button></form>','<form><input type="text"><input type="checkbox"> Subscribe<button type="reset">Reset</button></form>'],
+    why:'A single-line text box, a square checkbox with its text, and a button labelled by its content.', topics:['checkbox','text','button-submit'] },
+  { type:'render', q:'What do these three inputs look like?', h:80,
+    code:`<input type="range"> <input type="color"> <input type="date">`,
+    wrong:['<input type="text"> <input type="text"> <input type="text">','<input type="checkbox"> <input type="radio"> <input type="file">','<input type="range"> <input type="range"> <input type="range">'],
+    why:'A slider, a colour swatch and a date field with a picker.', topics:['range','color','date'] },
+  { type:'happens', q:'Which combination can be selected at the same time?',
+    code:`<input type="radio" name="size" value="s"> S
+<input type="radio" name="size" value="m"> M
+<input type="radio" name="size" value="l"> L
+<input type="checkbox" name="extra" value="cheese"> Cheese
+<input type="checkbox" name="extra" value="ham"> Ham`,
+    options:['S and M; Cheese and Ham','Only one size, but Cheese and Ham together','Only one of all five','Only one size and only one extra'], answer:1,
+    why:'Radios sharing a `name` are mutually exclusive; checkboxes are independent.', topics:['radio','checkbox'] },
+  { type:'happens', q:'Can the user select both options?',
+    code:`<input type="radio" name="a" value="1"> One
+<input type="radio" name="b" value="2"> Two`,
+    options:['Yes, they have different names, so they are separate groups','No, radios are always exclusive','Only if they hold Ctrl','Only after submitting'], answer:0,
+    why:'Radio grouping is decided by the `name` attribute, not by position.', topics:['radio'] },
+  { type:'bug', q:'Spot the bug: the label does not work. Click the line that must change.',
+    code:`<form action="/join" method="post">
+  <label for="email">Email</label>
+  <input type="email" name="email">
+  <button type="submit">Join</button>
+</form>`, answer:[3],
+    why:'`for="email"` must match the control’s `id`. The input has `name` but no `id="email"`.', topics:['label-for','email'] },
+  { type:'versus', q:'Which label style needs **no** `for`/`id` pair?',
+    options:['`<label for="n">Name</label><input id="n">`','`<label>Name <input type="text"></label>`','`<label>Name</label><input type="text">`','None, a label always needs `for`'], answer:1,
+    why:'Wrapping the control inside the label connects them implicitly.', topics:['label-wrap'] },
+  { type:'click', q:'Click the element that lets the user click the **text** to focus the input.',
+    code:`<label for="age">Age</label>
+<input type="number" id="age" name="age">`, answer:'label',
+    why:'`<label>` enlarges the click target and is read out by screen readers.', topics:['label-for','number'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<option>`?',
+    code:`<select name="country">
+  <option value="il">Israel</option>
+  <option value="us">USA</option>
+</select>`, target:'option:1', options:['`<select>`','`<form>`','`<label>`','`<textarea>`'], answer:0,
+    why:'Options live inside a `<select>` (or `<datalist>`).', topics:['select-option'] },
+  { type:'happens', q:'The user picks “United States”. What is in the URL?',
+    code:`<form action="/go" method="get">
+  <select name="country">
+    <option value="il">Israel</option>
+    <option value="us">United States</option>
+  </select>
+  <button type="submit">Go</button>
+</form>`,
+    options:['`?country=us`','`?country=United+States`','`?select=us`','`?option=us`'], answer:0,
+    why:'The key is the select’s `name`; the value is the chosen option’s `value`, not its text.', topics:['select-option','form-method'] },
+  { type:'happens', q:'The user clicks “Save”. What happens?',
+    code:`<form action="/save" method="post">
+  <input type="text" name="title">
+  <button type="button">Save</button>
+</form>`,
+    options:['Nothing is submitted: `type="button"` has no default action','The form is sent via POST','The form is reset','The page reloads'], answer:0,
+    why:'`type="button"` is meant for JavaScript handlers. Only `submit` sends the form.', topics:['button-button'] },
+  { type:'happens', q:'Which of these buttons does **nothing** by default?',
+    code:`<form action="/save" method="post">
+  <input type="text" name="title">
+  <button type="submit">Save</button>
+  <button type="reset">Clear</button>
+  <button type="button">Help</button>
+</form>`,
+    options:['Save','Clear','Help','All of them submit'], answer:2,
+    why:'Save submits, Clear resets the fields, Help (type=button) has no built-in behaviour.', topics:['button-button','button-reset','button-submit'] },
+  { type:'versus', q:'What does `<button type="reset">` do?',
+    options:['Restores every field to its initial value','Sends the form and clears it afterwards','Reloads the browser tab','Deletes the form'], answer:0,
+    why:'Reset returns controls to their `value`/`checked`/`selected` defaults.', topics:['button-reset'] },
+  { type:'versus', q:'How do you give a `<textarea>` initial text?',
+    options:['Put it between the tags: `<textarea>Hello</textarea>`','Use `value="Hello"`','Use `text="Hello"`','Self-close it: `<textarea />`'], answer:0,
+    why:'Unlike `<input>`, a textarea’s content is its text node.', topics:['textarea'] },
+  { type:'versus', q:'What exactly does `<input type="password">` do?',
+    options:['Masks the characters on screen; it does not encrypt anything','Encrypts the value before sending','Forces at least 8 characters','Prevents form submission'], answer:0,
+    why:'Only the display is masked. Protection comes from HTTPS and POST.', topics:['password'] },
+  { type:'versus', q:'What does `<input type="file" name="doc">` show?',
+    options:['A button that opens the operating system’s file chooser','A big text area','A drop-down list','A slider'], answer:0,
+    why:'The browser draws a “Choose file” control.', topics:['file'] },
+  { type:'versus', q:'Which type blocks letters from being typed in most browsers and shows a spinner?',
+    options:['`text`','`number`','`email`','`date`'], answer:1,
+    why:'`type="number"` restricts input to numbers; `email` only checks the format on submit.', topics:['number','email'] },
+  { type:'versus', q:'Which pairing of field and `type` is correct?',
+    options:['Birthday → `date`, favourite colour → `color`, quantity → `number`','Birthday → `number`, favourite colour → `text`, quantity → `range`','Birthday → `text`, favourite colour → `file`, quantity → `date`','Birthday → `color`, favourite colour → `date`, quantity → `hidden`'], answer:0,
+    why:'The type picks the widget and the built-in validation.', topics:['date','color','number'] },
+  { type:'click', q:'Click the input the user **cannot see** but that is still submitted.',
+    code:`<form action="/vote" method="post">
+  <input type="text" name="comment">
+  <input type="hidden" name="poll_id" value="17">
+  <button type="submit">Vote</button>
+</form>`, answer:'input:2',
+    why:'`type="hidden"` carries data (like an id) without a visible widget.', topics:['hidden'] },
+  { type:'click', q:'Click the button that **sends** the form.',
+    code:`<form action="/save" method="post">
+  <button type="submit">Save</button>
+  <button type="reset">Clear</button>
+</form>`, answer:'button:1',
+    why:'`type="submit"` triggers the submission; `reset` only restores defaults.', topics:['button-submit'] },
+  { type:'tree', q:'Pick the correct tree (ignore whitespace-only text).',
+    code:`<form>
+  <label>Email <input type="email" name="e"></label>
+  <button type="submit">Join</button>
+</form>`,
+    options:['form(label(#text,input),button(#text))','form(label(#text),input,button(#text))','form(label(#text,input,button(#text)))','form(label,input,button)'], answer:0,
+    why:'The wrapping label contains its text and the input; the button is a sibling.', topics:['label-wrap','email','button-submit'] },
+  { type:'match', q:'Match each snippet with its render.', h:70,
+    pairs:[{code:'<input type="checkbox"> Yes'},{code:'<input type="range">'},{code:'<input type="file">'},{code:'<textarea rows="2" cols="14"></textarea>'}],
+    why:'Square box, slider, file chooser, multi-line box.', topics:['checkbox','range','file','textarea'] },
+  { type:'versus', q:'A login form with a password: GET or POST?',
+    options:['GET, so users can bookmark their login','POST, so credentials are not placed in the URL','Either, they are identical','Neither; forms cannot log in'], answer:1,
+    why:'GET puts values in the URL, which ends up in history, logs and bookmarks.', topics:['post','password'] }
+ ]
+},
+
+/* ---------------------------------------------------------------- L7 */
+{
+ id:'L7', title:'Form validation attributes', blurb:'required, placeholder, value, min/max, minlength/maxlength, pattern, disabled, readonly, checked, selected',
+ topicList:['required','placeholder','value','min','max','minlength','maxlength','pattern','disabled','readonly','checked','selected'],
+ intro:[
+  'Attributes on form controls tell the **browser** how to validate before it sends anything. If a rule fails, submission is **blocked** and the browser shows a message.',
+  '- `required`: must not be empty. `placeholder`: a grey hint, **not** a value and never validated or sent. `value`: the initial (default) content.',
+  '- `min`/`max`: limits for `number`, `date`, `range` (inclusive). `minlength`/`maxlength`: text length; `maxlength` also stops typing. `pattern`: a regular expression the whole value must match.',
+  '- `disabled`: greyed out, not focusable, **not submitted**, skipped by validation. `readonly`: cannot be edited but **is** submitted, and is also skipped by validation.',
+  '- `checked` (checkbox/radio) and `selected` (option) set the default state. Boolean attributes are true whenever present: `disabled="false"` is still disabled.',
+  'Several questions below have a **live form**: predict first, then try it.'
+ ],
+ example:{ h:230, code:`<form action="#">
+  <input type="text" name="user" required placeholder="Username">
+  <input type="number" name="age" min="18" max="99" value="30">
+  <input type="text" name="zip" pattern="[0-9]{5}" minlength="5" maxlength="5">
+  <input type="text" name="id" value="A-17" readonly>
+  <input type="text" name="old" value="locked" disabled>
+  <input type="checkbox" name="tos" required checked> I agree
+  <select name="plan">
+    <option value="free">Free</option>
+    <option value="pro" selected>Pro</option>
+  </select>
+  <button type="submit">Send</button>
+</form>` },
+ questions:[
+  { type:'form', q:'The field is empty. You press Submit. Will the browser block it?',
+    html:`<input type="text" name="user" required>`, answer:'blocked',
+    why:'`required` fails on an empty value, so the browser stops the submission and shows a message.', topics:['required'] },
+  { type:'form', q:'You press Submit without touching anything. Blocked or submitted?',
+    html:`<input type="text" name="user" required value="Ann">`, answer:'submits',
+    why:'`value="Ann"` is real content, so `required` is satisfied.', topics:['required','value'] },
+  { type:'form', q:'The field shows a grey hint and is empty. Press Submit.',
+    html:`<input type="text" name="user" placeholder="Your name" required>`, answer:'blocked',
+    why:'A placeholder is only a hint; the field is still empty.', topics:['placeholder','required'] },
+  { type:'form', q:'The number is pre-filled with 12. Press Submit.',
+    html:`<input type="number" name="age" min="18" max="99" value="12">`, answer:'blocked',
+    why:'12 is below `min="18"`.', topics:['min','max','value'] },
+  { type:'form', q:'The value is 10. Press Submit.',
+    html:`<input type="number" name="n" min="1" max="10" value="10">`, answer:'submits',
+    why:'`min` and `max` are inclusive, so 10 is allowed.', topics:['max','min'] },
+  { type:'form', q:'The field contains “12a”. Press Submit.',
+    html:`<input type="text" name="code" pattern="[0-9]{3}" value="12a">`, answer:'blocked',
+    why:'The pattern requires exactly three digits; “12a” does not match.', topics:['pattern','value'] },
+  { type:'form', q:'Type `abc` into the field, then press Submit.',
+    html:`<input type="text" name="pw" minlength="5">`, answer:'blocked',
+    why:'The typed text has 3 characters, less than `minlength="5"`.', topics:['minlength'] },
+  { type:'form', q:'Try typing `abcdef` into the field, then press Submit.',
+    html:`<input type="text" name="tag" maxlength="3">`, answer:'submits',
+    why:'`maxlength` stops typing at 3 characters, so the value is never too long and the form submits.', topics:['maxlength'] },
+  { type:'form', q:'The field is empty and disabled. Press Submit.',
+    html:`<input type="text" name="x" required disabled>`, answer:'submits',
+    why:'Disabled controls are excluded from validation (and from the submitted data).', topics:['disabled','required'] },
+  { type:'form', q:'The field is empty and readonly. Press Submit.',
+    html:`<input type="text" name="x" required readonly>`, answer:'submits',
+    why:'Readonly fields are barred from constraint validation too, even though they are submitted.', topics:['readonly','required'] },
+  { type:'form', q:'The checkbox is unticked. Press Submit.',
+    html:`<input type="checkbox" name="agree" required> I agree`, answer:'blocked',
+    why:'A required checkbox must be checked.', topics:['required','checked'] },
+  { type:'form', q:'The first option has an empty value. Press Submit.',
+    html:`<select name="fruit" required>
+  <option value="">Choose…</option>
+  <option value="a">Apple</option>
+</select>`, answer:'blocked',
+    why:'The first option is selected by default and its value is empty, so `required` fails.', topics:['selected','required'] },
+  { type:'form', q:'Now “Apple” carries `selected`. Press Submit.',
+    html:`<select name="fruit" required>
+  <option value="">Choose…</option>
+  <option value="a" selected>Apple</option>
+</select>`, answer:'submits',
+    why:'`selected` makes Apple the default choice, and its value is not empty.', topics:['selected'] },
+  { type:'versus', q:'Which statement is true?',
+    options:['A `disabled` field is submitted; a `readonly` one is not','A `readonly` field is focusable and submitted; a `disabled` one is neither','Both are submitted','Neither can be seen'], answer:1,
+    why:'readonly = “look but don’t edit”, disabled = “inactive, ignore completely”.', topics:['disabled','readonly'] },
+  { type:'happens', q:'The user submits without changing anything. What is the URL?',
+    code:`<form action="/s" method="get">
+  <input type="text" name="a" value="1">
+  <input type="text" name="b" value="2" disabled>
+  <input type="text" name="c" value="3" readonly>
+  <button type="submit">Go</button>
+</form>`,
+    options:['`/s?a=1&b=2&c=3`','`/s?a=1&c=3`','`/s?a=1`','`/s?c=3`'], answer:1,
+    why:'`b` is disabled and dropped; `c` is readonly but still sent.', topics:['disabled','readonly','value'] },
+  { type:'versus', q:'`<input placeholder="Name">` vs `<input value="Name">`: what is sent if the user types nothing?',
+    options:['Placeholder: nothing; value: “Name”','Both send “Name”','Neither sends anything','Placeholder sends “Name”; value sends nothing'], answer:0,
+    why:'Placeholder is a hint only. `value` is real data that is submitted.', topics:['placeholder','value'] },
+  { type:'bug', q:'Spot the bug: the author wants the dropdown to default to Medium. Click the wrong line.',
+    code:`<select name="size" selected>
+  <option value="s">Small</option>
+  <option value="m">Medium</option>
+</select>`, answer:[1],
+    why:'`selected` belongs on the `<option>` (line 3), not on `<select>`.', topics:['selected'] },
+  { type:'bug', q:'Spot the bug: click the line with the attribute that does not apply.',
+    code:`<label for="n">Your name</label>
+<input type="text" id="n" name="n" min="2" max="10">`, answer:[2],
+    why:'`min`/`max` are for numbers, dates and ranges. For text length use `minlength`/`maxlength`.', topics:['min','max','minlength','maxlength'] },
+  { type:'bug', q:'The author wants the field to be **optional**. Click the line that is wrong.',
+    code:`<form action="/go">
+  <input type="text" name="nick" required="false">
+  <button type="submit">Go</button>
+</form>`, answer:[2],
+    why:'Boolean attributes are true whenever present. Remove `required` entirely.', topics:['required'] },
+  { type:'render', q:'What does the user see?', h:80,
+    code:`<input type="checkbox" checked> Agree
+<input type="text" value="Hello" disabled>
+<select><option>Red</option><option selected>Blue</option></select>`,
+    wrong:['<input type="checkbox"> Agree <input type="text" value="Hello" disabled> <select><option>Red</option><option>Blue</option></select>','<input type="checkbox" checked> Agree <input type="text" disabled> <select><option>Red</option><option selected>Blue</option></select>','<input type="checkbox" checked> Agree <input type="text" value="Hello"> <select><option>Red</option><option>Blue</option></select>'],
+    why:'A ticked checkbox, a greyed-out field showing “Hello”, and a dropdown that opens on “Blue”.', topics:['checked','disabled','selected','value'] },
+  { type:'click', q:'Click the attribute that blocks submission when the field is empty.',
+    code:`<input type="email" name="e" required placeholder="you@example.com">`, answer:'@required',
+    why:'`required`, not `placeholder`, enforces a value.', topics:['required','placeholder'] },
+  { type:'click', q:'Click the attribute that restricts the input to **five digits**.',
+    code:`<input type="text" name="zip" pattern="[0-9]{5}" required>`, answer:'@pattern',
+    why:'`pattern` holds a regular expression; `[0-9]{5}` means exactly five digits.', topics:['pattern'] },
+  { type:'happens', q:'Which value passes this field’s validation?',
+    code:`<input type="text" name="code" pattern="[A-Z]{2}[0-9]{2}">`,
+    options:['`ab12`','`AB12`','`AB123`','`A1B2`'], answer:1,
+    why:'Two capital letters followed by two digits, and the **whole** value must match.', topics:['pattern'] },
+  { type:'versus', q:'What does `maxlength="5"` do, and how is it different from `minlength="5"`?',
+    options:['`maxlength` stops typing after 5 characters; `minlength` blocks submission if fewer than 5 are typed','Both only show warnings','`maxlength` needs a number input; `minlength` needs text','They are identical'], answer:0,
+    why:'`maxlength` prevents extra characters, `minlength` validates the shortest allowed length.', topics:['maxlength','minlength'] }
+ ]
+},
+
+/* ---------------------------------------------------------------- L8 */
+{
+ id:'L8', title:'Global attributes', blurb:'id, class, name, style, title, hidden',
+ topicList:['id','class','name','style','title','hidden'],
+ intro:[
+  'Global attributes can be put on any element.',
+  '- `id`: a **unique** label per page. Targets for `#anchor` links, `<label for>`, CSS and JavaScript.',
+  '- `class`: a **reusable** label; one element may have several, separated by spaces (`class="card big"` = two classes).',
+  '- `name`: not global in the strict sense. It identifies a **form control** in the submitted data (`?q=…`) and groups radio buttons.',
+  '- `style`: inline CSS (`property: value;`). `title`: a tooltip on hover. `hidden`: the element is in the DOM but not displayed.',
+  'Quick rule: need to find it once → `id`; group of similar things → `class`; sending form data → `name`.'
+ ],
+ example:{ h:150, code:`<div id="intro" class="card highlight" title="Intro box" style="color: crimson;">
+  Hello
+</div>
+<p hidden>You cannot see me</p>
+<label for="user">User</label>
+<input type="text" name="user" id="user" class="wide">` },
+ questions:[
+  { type:'versus', q:'Which attribute may appear on **many** elements of a page, and which must be unique?',
+    options:['`class` can repeat; `id` must be unique','`id` can repeat; `class` must be unique','Both must be unique','Both can repeat'], answer:0,
+    why:'`id` identifies one element; `class` labels groups.', topics:['id','class'] },
+  { type:'versus', q:'In `<input type="text" name="q">`, what is `name` used for?',
+    options:['It is the key in the submitted data (`?q=…`)','It is the CSS selector','It is the `#fragment` target','It is the tooltip text'], answer:0,
+    why:'The server sees `q=value`.', topics:['name'] },
+  { type:'click', q:'Click the attribute that holds **inline CSS**.',
+    code:`<p class="note" style="color: red;">Warning</p>`, answer:'@style',
+    why:'`style` takes CSS declarations; `class` only names styles defined elsewhere.', topics:['style','class'] },
+  { type:'render', q:'What does the user see?', h:110,
+    code:`<p style="color:red">Red</p>
+<p hidden>Secret</p>
+<p>Visible</p>`,
+    wrong:['<p style="color:red">Red</p><p>Secret</p><p>Visible</p>','<p>Red</p><p>Visible</p>','<p style="color:red">Red</p><p style="color:red">Visible</p>'],
+    why:'The first paragraph is red, the hidden one is not drawn at all.', topics:['style','hidden'] },
+  { type:'versus', q:'What is the difference between the `title` **attribute** and the `<title>` **element**?',
+    options:['The attribute adds a hover tooltip to any element; the element sets the page title in the tab','They are the same thing','The attribute sets the tab text; the element adds a tooltip','The element can be used anywhere in the body'], answer:0,
+    why:'Same word, different jobs: `<title>` lives in `<head>`, while `title="…"` can sit on any element.', topics:['title'] },
+  { type:'happens', q:'The user hovers over “HTML” and waits. What happens?',
+    code:`<span title="HyperText Markup Language">HTML</span>`,
+    options:['A tooltip with the title text appears','The text turns into a link','The page title changes','Nothing, `title` is invisible'], answer:0,
+    why:'`title` is the tooltip attribute (not the same as the `<title>` element).', topics:['title'] },
+  { type:'bug', q:'Spot the bug: click the offending line.',
+    code:`<div id="box">One</div>
+<div id="box">Two</div>
+<div id="side">Three</div>`, answer:[2],
+    why:'`id` must be unique per page. Use `class="box"` if several elements share a look.', topics:['id','class'] },
+  { type:'bug', q:'Spot the bug: the red colour is not applied. Click the line.',
+    code:`<p style="font-size: 20px">Big</p>
+<p style="color=red">Red?</p>`, answer:[2],
+    why:'CSS declarations use `:`, not `=`. It should be `color: red;`.', topics:['style'] },
+  { type:'happens', q:'How many classes does this element have?',
+    code:`<div class="card big featured">…</div>`,
+    options:['One, named “card big featured”','Three: card, big and featured','One: card','It is an error'], answer:1,
+    why:'Class names are separated by spaces.', topics:['class'] },
+  { type:'happens', q:'What makes these radio buttons mutually exclusive?',
+    code:`<input type="radio" name="color" id="c1" value="r">
+<input type="radio" name="color" id="c2" value="g">`,
+    options:['They share the same `name`','They have different `id`s','They have different `value`s','They are next to each other'], answer:0,
+    why:'The browser groups radios by `name`.', topics:['name','id'] },
+  { type:'happens', q:'What happens to this paragraph?',
+    code:`<p hidden>Secret</p>`,
+    options:['It is not displayed (the element still exists in the document)','It is displayed in light grey','It is only displayed when printing','The browser deletes it'], answer:0,
+    why:'`hidden` removes the element from rendering, much like `display: none`.', topics:['hidden'] },
+  { type:'click', q:'`for="user"` points at which attribute? Click it.',
+    code:`<label for="user">Username</label>
+<input type="text" id="user" name="user" class="wide">`, answer:'@id:1',
+    why:'`for` is matched against the control’s `id`, not its `name` or `class`.', topics:['id','name'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<p>`?',
+    code:`<div class="card">
+  <p id="x" hidden>Hi</p>
+</div>`, target:'p:1', options:['`<div class="card">`','`<body>`','`<span>`','`<p>`'], answer:0,
+    why:'Attributes do not change structure; the `<div>` encloses the `<p>`.', topics:['class','id','hidden'] },
+  { type:'match', q:'Match each snippet with its render.', h:60,
+    pairs:[{code:'<p style="color:red">Hi</p>'},{code:'<p style="font-size:28px">Hi</p>'},{code:'<p style="background:yellow">Hi</p>'},{code:'<p hidden>Hi</p>'}],
+    why:'Red text, big text, yellow background, and nothing at all for the hidden paragraph.', topics:['style','hidden'] },
+  { type:'versus', q:'Which attribute is the target of a link like `<a href="#about">`?',
+    options:['`id="about"`','`class="about"`','`name="about"`','`title="about"`'], answer:0,
+    why:'Fragments match element ids.', topics:['id'] },
+  { type:'versus', q:'`<input id="a" name="b">`: which attribute is used by `<label for>` and which becomes the submitted key?',
+    options:['`for` → id, key → name','`for` → name, key → id','Both → id','Both → name'], answer:0,
+    why:'id = identity on the page, name = identity in the submitted data.', topics:['id','name'] }
+ ]
+},
+
+/* ---------------------------------------------------------------- L9 */
+{
+ id:'L9', title:'Semantic HTML', blurb:'header, nav, main, footer, section, article, aside',
+ topicList:['header','nav','main','footer','section','article','aside','div-vs-semantic'],
+ intro:[
+  'Semantic tags look like `<div>`s in the browser (plain blocks) but **say what the content is**. Screen readers can jump between landmarks, search engines understand the page, and you can read the structure at a glance.',
+  '- `<header>`: intro or top of a page or section. `<nav>`: main navigation links. `<main>`: the dominant content, once per page. `<footer>`: closing info.',
+  '- `<section>`: a thematic group, normally with a heading. `<article>`: a self-contained piece that makes sense alone (post, comment, product card). `<aside>`: tangential content like a sidebar.',
+  'Below, the same page twice: first with only divs, then semantic. Hover over the tags in the second one.'
+ ],
+ example:{ h:210, code:`<header>
+  <h1>Daily Bytes</h1>
+  <nav><a href="/">Home</a> <a href="/about">About</a></nav>
+</header>
+<main>
+  <article>
+    <h2>Why HTML matters</h2>
+    <p>Structure comes first.</p>
+  </article>
+  <aside>Related: CSS basics</aside>
+</main>
+<footer>(c) 2025</footer>` },
+ example2:{ title:'Same page, divs only: a human must guess what each div is', h:210, code:`<div class="header">
+  <h1>Daily Bytes</h1>
+  <div class="nav"><a href="/">Home</a> <a href="/about">About</a></div>
+</div>
+<div class="main">
+  <div class="article">
+    <h2>Why HTML matters</h2>
+    <p>Structure comes first.</p>
+  </div>
+  <div class="aside">Related: CSS basics</div>
+</div>
+<div class="footer">(c) 2025</div>` },
+ questions:[
+  { type:'click', q:'Click the element for the site’s **main navigation links**.',
+    code:`<body>
+  <header>
+    <h1>Daily Bytes</h1>
+    <nav><a href="/">Home</a> <a href="/about">About</a></nav>
+  </header>
+  <main>
+    <article>
+      <h2>Why HTML matters</h2>
+      <p>Structure comes first.</p>
+    </article>
+    <aside>Related: CSS basics</aside>
+  </main>
+  <footer>(c) 2025</footer>
+</body>`, answer:'nav', why:'`<nav>` marks a block of major navigation links.', topics:['nav','header'] },
+  { type:'click', q:'Click the element for the **sidebar**-style, tangential content.',
+    code:`<body>
+  <header>
+    <h1>Daily Bytes</h1>
+    <nav><a href="/">Home</a> <a href="/about">About</a></nav>
+  </header>
+  <main>
+    <article>
+      <h2>Why HTML matters</h2>
+      <p>Structure comes first.</p>
+    </article>
+    <aside>Related: CSS basics</aside>
+  </main>
+  <footer>(c) 2025</footer>
+</body>`, answer:'aside', why:'`<aside>` is content related to, but separate from, the main flow.', topics:['aside'] },
+  { type:'versus', q:'When is `<article>` a better fit than `<section>`?',
+    options:['When the content is self-contained and could stand alone, such as a blog post or comment','When you need a heading','When you want a wider box','Never; they are the same'], answer:0,
+    why:'`<section>` is a thematic chunk of something bigger; `<article>` can be reused or syndicated on its own.', topics:['article','section'] },
+  { type:'versus', q:'Which of these should appear **once** per page?',
+    options:['`<section>`','`<main>`','`<article>`','`<nav>`'], answer:1,
+    why:'`<main>` identifies the dominant content, so only one visible `<main>` is allowed.', topics:['main'] },
+  { type:'render', q:'What does the user see?', h:130,
+    code:`<header>Top</header>
+<main><p>Middle</p></main>
+<footer>Bottom</footer>`,
+    wrong:['<div style="display:flex;gap:10px"><div>Top</div><div><p>Middle</p></div><div>Bottom</div></div>','<h1>Top</h1><p>Middle</p><h6>Bottom</h6>','<p>Middle</p>'],
+    why:'Semantic tags have no special look: three stacked blocks, like divs.', topics:['header','main','footer'] },
+  { type:'match', q:'Match each snippet with its render.', h:100,
+    pairs:[{code:'<nav><a href="#">Home</a> | <a href="#">About</a></nav>'},{code:'<article><h3>Post</h3><p>Text</p></article>'},{code:'<footer><hr><p>(c) 2025</p></footer>'}],
+    why:'A row of links, a titled post, and a footer separated by a line.', topics:['nav','article','footer'] },
+  { type:'bug', q:'Spot the bug: click the mismatched closing tag.',
+    code:`<body>
+  <header><h1>Blog</h1></header>
+  <main>
+    <article>
+      <h2>Post</h2>
+    </section>
+  </main>
+</body>`, answer:[6],
+    why:'The `<article>` must be closed by `</article>`, not `</section>`.', topics:['article','section'] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<article>`?',
+    code:`<body>
+  <main>
+    <section>
+      <h2>Latest</h2>
+      <article>Post one</article>
+    </section>
+  </main>
+</body>`, target:'article:1', options:['`<main>`','`<section>`','`<body>`','`<header>`'], answer:1,
+    why:'The article sits inside the section, which sits inside main.', topics:['article','section','main'] },
+  { type:'tree', q:'Pick the correct tree (ignore whitespace-only text).',
+    code:`<body>
+  <header><h1>Blog</h1><nav><a href="/">Home</a><a href="/me">Me</a></nav></header>
+  <main><article><h2>Post</h2><p>Text</p></article><aside>Links</aside></main>
+  <footer>(c)</footer>
+</body>`,
+    options:['body(header(h1(#text),nav(a(#text),a(#text))),main(article(h2(#text),p(#text)),aside(#text)),footer(#text))','body(header(h1),nav(a,a),main(article,aside),footer)','body(header(h1(#text),nav(a(#text),a(#text)),main(article(h2(#text),p(#text)),aside(#text))),footer(#text))','body(header(h1(#text),nav(a(#text),a(#text))),main(article(h2(#text),p(#text))),aside(#text),footer(#text))'], answer:0,
+    why:'`header`, `main`, `footer` are siblings in `body`; `aside` is inside `main` next to `article`.', topics:['header','nav','main','article','aside','footer'] },
+  { type:'versus', q:'Why use `<nav>` instead of `<div class="nav">`?',
+    options:['Assistive technology can announce it and jump to it as a navigation landmark','It makes the links blue','It makes links load faster','It is required for `href` to work'], answer:0,
+    why:'Same look, but the tag name carries meaning for machines and readers.', topics:['nav','div-vs-semantic'] },
+  { type:'versus', q:'What is the best replacement for `<div class="footer">`?',
+    options:['`<footer>`','`<aside>`','`<section>`','`<header>`'], answer:0,
+    why:'Closing information (copyright, contacts) is what `<footer>` is for.', topics:['footer','div-vs-semantic'] },
+  { type:'click', q:'Click the element holding a **self-contained blog post**.',
+    code:`<main>
+  <section>
+    <h2>Latest</h2>
+    <article>
+      <h3>Post</h3>
+      <p>Hello.</p>
+    </article>
+  </section>
+</main>`, answer:'article', why:'A post stands on its own, so `<article>`.', topics:['article'] },
+  { type:'happens', q:'A screen-reader user presses “jump to main content”. Which page supports it?',
+    options:['The page wrapping content in `<main>`','The page wrapping content in `<div class="main">`','Both identically','Neither; screen readers cannot jump'], answer:0,
+    why:'`<main>` is a landmark; a class name is invisible to assistive technology.', topics:['main','div-vs-semantic'] },
+  { type:'happens', q:'Does `<aside>` change how the content looks by default?',
+    options:['No, it is a plain block like `<div>`; layout comes from CSS','Yes, it floats to the right','Yes, it is drawn in a grey box','Yes, it is hidden'], answer:0,
+    why:'Semantics describe meaning. Appearance is CSS’s job.', topics:['aside'] },
+  { type:'click', q:'This page uses only divs. Click the `<div>` that should be a `<nav>`.',
+    code:`<div class="header">
+  <h1>Daily Bytes</h1>
+  <div class="nav"><a href="/">Home</a> <a href="/about">About</a></div>
+</div>
+<div class="main">
+  <div class="article">…</div>
+</div>`, answer:'div:3', why:'The third div wraps the navigation links.', topics:['nav','div-vs-semantic'] },
+  { type:'click', q:'Click the element at the **top of the page** with the title and navigation.',
+    code:`<header>
+  <h1>Daily Bytes</h1>
+  <nav><a href="/">Home</a></nav>
+</header>
+<main>…</main>`, answer:'header', why:'`<header>` introduces a page or section.', topics:['header'] },
+  { type:'versus', q:'Which element groups related content under its own heading, such as the “Pricing” part of a landing page?',
+    options:['`<section>`','`<aside>`','`<footer>`','`<main>`'], answer:0,
+    why:'`<section>` is a thematic grouping, usually with a heading.', topics:['section'] }
+ ]
+},
+
+/* --------------------------------------------------------------- L10 */
+{
+ id:'L10', title:'Boss level', blurb:'A realistic page that combines everything',
+ topicList:[],
+ intro:[
+  'The page below is a small coffee-shop site. It combines every level: document structure, text, lists, links and media, a table, a form with validation, global attributes and semantic layout.',
+  'Read it top-down, then answer 15+ questions about it. The full code stays visible next to every question; line numbers help you refer to it. Take your time: reading is the skill.'
+ ],
+ example:{ h:360, code:'@shared' },
+ shared:`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Bean There: a tiny coffee shop">
+  <title>Bean There Coffee</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js"><\/script>
+</head>
+<body>
+  <header id="top" class="site-header">
+    <h1>Bean There</h1>
+    <nav>
+      <ul>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#order">Order</a></li>
+        <li><a href="https://maps.example.com" target="_blank" rel="noopener noreferrer">Find us</a></li>
+        <li><a href="mailto:hello@beanthere.example">Email</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="menu">
+      <h2>Menu</h2>
+      <p>Roasted <strong>every morning</strong>.<br>Ask about our <em>seasonal</em> blends.</p>
+      <table>
+        <caption>Prices (USD)</caption>
+        <thead>
+          <tr><th>Drink</th><th>Small</th><th>Large</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Espresso</td><td>2.50</td><td>3.50</td></tr>
+          <tr><td>Latte</td><td colspan="2">4.00</td></tr>
+        </tbody>
+      </table>
+      <img src="img/beans.jpg" alt="A pile of roasted beans" width="300" height="200">
+      <video controls width="320">
+        <source src="roast.mp4" type="video/mp4">
+        <source src="roast.webm" type="video/webm">
+      </video>
+    </section>
+
+    <hr>
+
+    <section id="order">
+      <h2>Order</h2>
+      <form action="/order" method="post">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required placeholder="Your name">
+        <label>Email <input type="email" name="email" required></label>
+        <input type="number" name="qty" min="1" max="10" value="1">
+        <input type="radio" name="size" value="s" checked> Small
+        <input type="radio" name="size" value="l"> Large
+        <select name="drink">
+          <option value="es">Espresso</option>
+          <option value="la" selected>Latte</option>
+        </select>
+        <textarea name="note" maxlength="100"></textarea>
+        <input type="hidden" name="shop" value="42">
+        <input type="text" name="promo" pattern="[A-Z]{4}" disabled>
+        <button type="submit">Send</button>
+        <button type="reset">Clear</button>
+      </form>
+    </section>
+
+    <article>
+      <h2>Our story</h2>
+      <p>We opened in <span class="year">2019</span>.</p>
+      <ol>
+        <li>Roast</li>
+        <li>Grind</li>
+        <li>Brew</li>
+      </ol>
+    </article>
+
+    <aside hidden>
+      <p>Closed on Sundays.</p>
+    </aside>
+  </main>
+
+  <footer>
+    <div class="map">
+      <iframe src="https://maps.example.com/embed" width="300" height="150"></iframe>
+    </div>
+    <p>Call <a href="tel:+15551234567">555-1234</a></p>
+    <p style="color: gray;" title="Last update">(c) Bean There</p>
+  </footer>
+</body>
+</html>`,
+ questions:[
+  { type:'click', q:'Click the tag that attaches an external **stylesheet**.', code:'@shared', answer:'link',
+    why:'`<link rel="stylesheet" href="style.css">` in the head.', topics:[] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<li>` (“Find us”)?', code:'@shared', target:'li:3',
+    options:['`<nav>`','`<ul>`','`<header>`','`<a>`'], answer:1,
+    why:'The four `<li>`s sit in a `<ul>`, which sits in `<nav>`, which sits in `<header>`.', topics:[] },
+  { type:'happens', q:'Which navigation link opens in a **new tab**?', code:'@shared',
+    options:['Menu','Order','Find us','Email'], answer:2,
+    why:'Only “Find us” has `target="_blank"`. Menu and Order are same-page anchors; Email is a mailto link.', topics:[] },
+  { type:'happens', q:'The user clicks “Order” in the navigation. What happens?', code:'@shared',
+    options:['The page scrolls to the element with `id="order"`','A new page called order loads','An email is composed','The form is submitted'], answer:0,
+    why:'`href="#order"` is a fragment link to the section with that id.', topics:[] },
+  { type:'click', q:'Click the attribute that makes the Latte price span **two columns**.', code:'@shared', answer:'@colspan',
+    why:'`colspan="2"` stretches the 4.00 cell over the Small and Large columns.', topics:[] },
+  { type:'happens', q:'How many columns does the price table have?', code:'@shared',
+    options:['2','3','4','5'], answer:1,
+    why:'The header row has three `<th>`s. The Latte row uses 1 + a cell spanning 2 = 3 columns.', topics:[] },
+  { type:'happens', q:'The user submits the order form. What does the URL look like afterwards?', code:'@shared',
+    options:['`/order?name=…&email=…`','`/order`: the data is in the request body (POST)','`/order#name=…`','`/?order`'], answer:1,
+    why:'`method="post"` keeps the values out of the URL.', topics:[] },
+  { type:'happens', q:'Which of these fields is **not** sent with the form?', code:'@shared',
+    options:['The promo code field (disabled)','The quantity','The hidden `shop` field','The drink select'], answer:0,
+    why:'`disabled` controls are never submitted. Hidden fields are sent, just not shown.', topics:[] },
+  { type:'happens', q:'The user leaves “Name” empty and presses Send. What happens?', code:'@shared',
+    options:['The browser blocks the submission (the field is `required`)','The form is sent with an empty name','The page reloads','The placeholder is sent as the name'], answer:0,
+    why:'`required` fails on empty values; `placeholder` is only a hint.', topics:[] },
+  { type:'happens', q:'Can the user select both “Small” and “Large”?', code:'@shared',
+    options:['No: the radios share `name="size"`','Yes, they are checkboxes in disguise','Yes, because they have different values','Only after pressing Clear'], answer:0,
+    why:'Radios with the same `name` form one exclusive group.', topics:[] },
+  { type:'happens', q:'The user presses Send without changing the drink. Which `drink` value is submitted?', code:'@shared',
+    options:['`es`','`la`','`Latte`','Nothing'], answer:1,
+    why:'The Latte option has `selected`; the value sent is its `value` attribute, `la`.', topics:[] },
+  { type:'happens', q:'Is the “Closed on Sundays.” note visible to visitors?', code:'@shared',
+    options:['No: the `<aside>` has the `hidden` attribute','Yes, in a sidebar','Yes, at the bottom','Only on mobile'], answer:0,
+    why:'`hidden` stops the element from being displayed.', topics:[] },
+  { type:'click', q:'Click the element that **embeds** the map inside the page.', code:'@shared', answer:'iframe',
+    why:'The `<iframe>` shows another page inline. The `<a href="tel:…">` just starts a call.', topics:[] },
+  { type:'parent', q:'Find the parent: which element directly contains the highlighted `<source>`?', code:'@shared', target:'source:1',
+    options:['`<section id="menu">`','`<video>`','`<audio>`','`<main>`'], answer:1,
+    why:'Both `<source>`s are offered to the `<video>` element.', topics:[] },
+  { type:'tree', q:'Pick the correct tree for the `<nav>` of this page (ignore whitespace-only text).',
+    code:`<nav>
+  <ul>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#order">Order</a></li>
+  </ul>
+</nav>`,
+    options:['nav(ul(li(a(#text)),li(a(#text))))','nav(ul(li,li),a,a)','nav(ul(li(a(#text),li(a(#text)))))','nav(li(a(#text)),li(a(#text)))'], answer:0,
+    why:'Each `li` contains an `a`, which contains its text; both `li`s are children of the `ul`.', topics:[] },
+  { type:'bug', q:'Spot the bug in this form snippet: the label does not work. Click the line that must change.',
+    code:`<section id="order">
+  <h2>Order</h2>
+  <form action="/order" method="post">
+    <label for="email">Email</label>
+    <input type="email" id="mail" name="email">
+  </form>
+</section>`, answer:[4,5],
+    why:'`for="email"` matches no id: the input’s id is “mail”. Make them equal.', topics:[] },
+  { type:'render', q:'Which preview matches the price table?', h:150,
+    code:`<table>
+  <caption>Prices (USD)</caption>
+  <tr><th>Drink</th><th>Small</th><th>Large</th></tr>
+  <tr><td>Espresso</td><td>2.50</td><td>3.50</td></tr>
+  <tr><td>Latte</td><td colspan="2">4.00</td></tr>
+</table>`,
+    wrong:['<table><caption>Prices (USD)</caption><tr><th>Drink</th><th>Small</th><th>Large</th></tr><tr><td>Espresso</td><td>2.50</td><td>3.50</td></tr><tr><td>Latte</td><td>4.00</td><td></td></tr></table>','<table><caption>Prices (USD)</caption><tr><th>Drink</th><th>Small</th><th>Large</th></tr><tr><td>Espresso</td><td>2.50</td><td>3.50</td></tr><tr><td colspan="2">Latte</td><td>4.00</td></tr></table>','<table><caption>Prices (USD)</caption><tr><td>Espresso</td><td>2.50</td><td>3.50</td></tr><tr><td>Latte</td><td colspan="2">4.00</td></tr></table>'],
+    why:'Caption on top, a bold header row, and “4.00” stretched under both price columns.', topics:[] },
+  { type:'match', q:'Match each snippet from the page with its render.', h:80,
+    pairs:[{code:'<p>Roasted <strong>every morning</strong>.<br>Ask about our <em>seasonal</em> blends.</p>'},{code:'<ol><li>Roast</li><li>Grind</li><li>Brew</li></ol>'},{code:'<p>Call <a href="tel:+15551234567">555-1234</a></p>'},{code:'<p style="color: gray;" title="Last update">(c) Bean There</p>'}],
+    why:'Bold + italic text on two lines, a numbered list, a phone link, and grey text.', topics:[] },
+  { type:'versus', q:'What does `<strong>every morning</strong>` tell assistive technology, compared with `<b>`?', code:'@shared',
+    options:['The words are important (semantic), not just bold','The words are a heading','The words are a link','Nothing; `<strong>` and `<b>` are identical'], answer:0,
+    why:'`<strong>` carries importance; `<b>` is purely stylistic.', topics:[] },
+  { type:'click', q:'Click the element that holds the self-contained “Our story” piece.', code:'@shared', answer:'article',
+    why:'`<article>` marks standalone content; the two `<section>`s are thematic chunks of the page.', topics:[] },
+  { type:'versus', q:'`class="site-header"` and `id="top"` are both on the header. Which can be reused on other elements?', code:'@shared',
+    options:['`class="site-header"`','`id="top"`','Both','Neither'], answer:0,
+    why:'Ids must be unique; classes are meant to be reused.', topics:[] },
+  { type:'happens', q:'What text appears on the browser **tab**?', code:'@shared',
+    options:['Bean There Coffee','Bean There','Bean There: a tiny coffee shop','Menu'], answer:0,
+    why:'The tab shows the `<title>` text. The `<h1>` is page content; the description is for search engines.', topics:[] }
+ ]
+}
+
+ ] /* end levels */
+};
+
+/* ====================================================================
+   CHEAT SHEET DATA: [name, kind, level, description, example, aliases?]
+   kind: 'tag' | 'attr' | 'value'.  Also used for the hover tooltips.
+   ==================================================================== */
+const CHEAT = [
+ ['!DOCTYPE','tag',1,'Declares the file as modern HTML (standards mode). Not an element; must be the first line.','<!DOCTYPE html>',['!doctype']],
+ ['html','tag',1,'Root element. Contains exactly one head and one body.','<html>…</html>'],
+ ['head','tag',1,'Metadata container (title, meta, link, script). Not drawn on the page.','<head>…</head>'],
+ ['body','tag',1,'Everything the user sees in the browser window.','<body>…</body>'],
+ ['meta','tag',1,'Void element with page metadata: encoding, viewport, description.','<meta charset="UTF-8">'],
+ ['title','tag',1,'Page title shown in the tab, bookmarks and search results.','<title>My Page</title>'],
+ ['link','tag',1,'Void element that relates an external resource, usually a stylesheet.','<link rel="stylesheet" href="a.css">'],
+ ['script','tag',1,'Embeds or loads JavaScript. Needs a closing tag even with src.','<script src="app.js"><\/script>'],
+ ['h1–h6','tag',2,'Headings, h1 = most important, h6 = least. Define the page outline.','<h2>Section</h2>',['h1','h2','h3','h4','h5','h6']],
+ ['p','tag',2,'Paragraph. Whitespace inside collapses.','<p>Some text</p>'],
+ ['br','tag',2,'Void element: forces a line break inside a paragraph.','Line one<br>Line two'],
+ ['hr','tag',2,'Void element: thematic break, drawn as a horizontal rule.','<hr>'],
+ ['strong','tag',2,'Content of strong importance (semantic). Bold by default.','<strong>Warning</strong>'],
+ ['b','tag',2,'Bold for attention only, with no extra importance (keywords, product names).','<b>Espresso</b>'],
+ ['em','tag',2,'Stressed emphasis that can change meaning. Italic by default.','I <em>said</em> no'],
+ ['i','tag',2,'Alternate voice: technical terms, foreign phrases. Italic by default.','<i>Homo sapiens</i>'],
+ ['span','tag',2,'Generic inline container with no meaning of its own.','a <span class="x">word</span>'],
+ ['div','tag',2,'Generic block container with no meaning of its own.','<div class="card">…</div>'],
+ ['ul','tag',3,'Unordered (bulleted) list. Only li children.','<ul><li>A</li></ul>'],
+ ['ol','tag',3,'Ordered (numbered) list. Only li children.','<ol><li>A</li></ol>'],
+ ['li','tag',3,'A list item. May contain a nested list.','<li>Item</li>'],
+ ['a','tag',4,'Hyperlink. The text between the tags is clickable.','<a href="/about">About</a>'],
+ ['img','tag',4,'Void element that shows an image.','<img src="cat.jpg" alt="A cat">'],
+ ['video','tag',4,'Embeds a video. Add controls to show a player; nest source elements.','<video controls src="a.mp4"></video>'],
+ ['audio','tag',4,'Embeds a sound player (with controls).','<audio controls src="a.mp3"></audio>'],
+ ['source','tag',4,'Void element inside video/audio offering one file; the first playable one wins.','<source src="a.webm" type="video/webm">'],
+ ['iframe','tag',4,'Embeds another web page in a rectangle.','<iframe src="/map" width="300" height="200"></iframe>'],
+ ['table','tag',5,'Tabular data made of rows (tr).','<table>…</table>'],
+ ['tr','tag',5,'A table row; contains td/th cells.','<tr><td>1</td></tr>'],
+ ['td','tag',5,'A data cell inside a row.','<td>42</td>'],
+ ['th','tag',5,'A header cell (bold and centred by default).','<th>Name</th>'],
+ ['thead','tag',5,'Group of header rows.','<thead><tr><th>A</th></tr></thead>'],
+ ['tbody','tag',5,'Group of body rows.','<tbody><tr><td>1</td></tr></tbody>'],
+ ['tfoot','tag',5,'Group of footer rows (totals).','<tfoot><tr><td>Σ</td></tr></tfoot>'],
+ ['caption','tag',5,'Title of a table. Must be the first child of table.','<caption>Sales</caption>'],
+ ['form','tag',6,'Groups controls and sends them to action using method.','<form action="/s" method="get">…</form>'],
+ ['input','tag',6,'Void element: a form control. Its type decides the widget.','<input type="text" name="q">'],
+ ['label','tag',6,'Caption for a control; clicking it focuses the control.','<label for="q">Search</label>'],
+ ['select','tag',6,'Drop-down list; contains option elements.','<select name="c">…</select>'],
+ ['option','tag',6,'One choice inside a select. Its value is what gets sent.','<option value="il">Israel</option>'],
+ ['textarea','tag',6,'Multi-line text box. Initial text goes between the tags.','<textarea name="m">Hi</textarea>'],
+ ['button','tag',6,'Clickable button. type = submit, reset or button.','<button type="submit">Send</button>'],
+ ['header','tag',9,'Intro or top area of a page or section.','<header><h1>Site</h1></header>'],
+ ['nav','tag',9,'Block of major navigation links.','<nav><a href="/">Home</a></nav>'],
+ ['main','tag',9,'The dominant content; once per page.','<main>…</main>'],
+ ['footer','tag',9,'Closing info of a page or section.','<footer>(c) 2025</footer>'],
+ ['section','tag',9,'Thematic group of content, usually with a heading.','<section><h2>Pricing</h2></section>'],
+ ['article','tag',9,'Self-contained piece (post, comment, card).','<article><h2>Post</h2></article>'],
+ ['aside','tag',9,'Tangential content such as a sidebar.','<aside>Related links</aside>'],
+
+ ['charset','attr',1,'On meta: the text encoding of the file (use UTF-8).','<meta charset="UTF-8">'],
+ ['content','attr',1,'On meta: the value for the metadata named by name.','<meta name="description" content="…">'],
+ ['name','attr',6,'On meta: kind of metadata (viewport, description). On form controls: the key in the submitted data; groups radio buttons.','<input type="text" name="q">'],
+ ['rel','attr',4,'Relationship to the linked file: stylesheet on link, noopener noreferrer on a.','<a rel="noopener noreferrer" …>'],
+ ['href','attr',4,'Destination URL of a link (a) or stylesheet (link).','<a href="https://example.com">Go</a>'],
+ ['src','attr',4,'Location of the file to load (img, script, video, audio, source, iframe).','<img src="img/cat.jpg" …>'],
+ ['target','attr',4,'Where a link opens. _blank = new tab.','<a href="/x" target="_blank">x</a>'],
+ ['alt','attr',4,'Text alternative for an image (screen readers, broken images).','<img src="a.png" alt="Logo">'],
+ ['width','attr',4,'Width in pixels (img, video, iframe, canvas…). Reserves layout space.','<img width="200" …>'],
+ ['height','attr',4,'Height in pixels. Reserves layout space.','<img height="100" …>'],
+ ['controls','attr',4,'Shows the player UI on video and audio.','<video controls …>'],
+ ['colspan','attr',5,'Makes a cell span n columns.','<td colspan="2">Wide</td>'],
+ ['rowspan','attr',5,'Makes a cell span n rows.','<td rowspan="2">Tall</td>'],
+ ['action','attr',6,'URL that receives the form data.','<form action="/search">'],
+ ['method','attr',6,'How to send: get (data in URL) or post (data in request body).','<form method="post">'],
+ ['type','attr',6,'On input: widget (text, email, password, number, date, checkbox, radio, file, range, color, hidden). On button: submit, reset, button. On source: MIME type.','<input type="email">'],
+ ['for','attr',6,'On label: the id of the control it labels.','<label for="q">Search</label>'],
+ ['rows','attr',6,'On textarea: visible number of text lines.','<textarea rows="4"></textarea>'],
+ ['cols','attr',6,'On textarea: visible width in characters.','<textarea cols="30"></textarea>'],
+ ['required','attr',7,'The field must not be empty (checkbox: must be checked).','<input required>'],
+ ['placeholder','attr',7,'Grey hint text. Not a value; never submitted or validated.','<input placeholder="Name">'],
+ ['value','attr',7,'Initial or submitted value of a control or option.','<input value="Ann">'],
+ ['min','attr',7,'Smallest allowed number or date (inclusive).','<input type="number" min="1">'],
+ ['max','attr',7,'Largest allowed number or date (inclusive).','<input type="number" max="10">'],
+ ['minlength','attr',7,'Shortest allowed text length.','<input minlength="5">'],
+ ['maxlength','attr',7,'Longest allowed text length; also stops typing.','<input maxlength="20">'],
+ ['pattern','attr',7,'Regular expression the whole value must match.','<input pattern="[0-9]{5}">'],
+ ['disabled','attr',7,'Inactive: greyed out, not focusable, not submitted, not validated.','<input disabled>'],
+ ['readonly','attr',7,'Not editable, but focusable and submitted; skipped by validation.','<input readonly value="A-1">'],
+ ['checked','attr',7,'Checkbox or radio is ticked by default.','<input type="checkbox" checked>'],
+ ['selected','attr',7,'Option is chosen by default.','<option selected>Pro</option>'],
+ ['id','attr',8,'Unique identifier on the page: anchor target, label target, CSS/JS hook.','<div id="intro">'],
+ ['class','attr',8,'Reusable label(s), space-separated, mainly for CSS and JS.','<div class="card big">'],
+ ['style','attr',8,'Inline CSS declarations.','<p style="color: red;">'],
+ ['title','attr',8,'Tooltip shown on hover (not the title element).','<span title="Hello">…</span>'],
+ ['hidden','attr',8,'Element exists but is not displayed.','<p hidden>Secret</p>'],
+
+ ['mailto:','value',4,'URL scheme in href: opens an email draft (add ?subject=… to prefill).','<a href="mailto:jo@x.org">Mail</a>'],
+ ['tel:','value',4,'URL scheme in href: starts a phone call on mobile.','<a href="tel:+15551234567">Call</a>'],
+ ['#id','value',4,'Fragment in href: jump to the element with that id on the page.','<a href="#contact">Contact</a>'],
+ ['_blank','value',4,'target value that opens the link in a new tab.','<a target="_blank" …>'],
+ ['method="get"','value',6,'Data is appended to the URL: /search?q=cats. Visible and bookmarkable.','<form method="get">'],
+ ['method="post"','value',6,'Data travels in the request body; URL unchanged.','<form method="post">'],
+ ['type="text"','value',6,'Single-line text box (default type).','<input type="text">'],
+ ['type="email"','value',6,'Text box that expects an email address.','<input type="email">'],
+ ['type="password"','value',6,'Masks the characters on screen (no encryption).','<input type="password">'],
+ ['type="number"','value',6,'Numeric field with spinner; supports min/max.','<input type="number">'],
+ ['type="date"','value',6,'Date picker.','<input type="date">'],
+ ['type="checkbox"','value',6,'Independent on/off box.','<input type="checkbox">'],
+ ['type="radio"','value',6,'One-of-many; radios with the same name are exclusive.','<input type="radio" name="size">'],
+ ['type="file"','value',6,'File chooser.','<input type="file">'],
+ ['type="range"','value',6,'Slider.','<input type="range">'],
+ ['type="color"','value',6,'Colour picker.','<input type="color">'],
+ ['type="hidden"','value',6,'Invisible field that still submits its value.','<input type="hidden" name="id" value="7">'],
+ ['type="submit"','value',6,'Button that sends the form (default in a form).','<button type="submit">'],
+ ['type="reset"','value',6,'Button that restores initial field values.','<button type="reset">'],
+ ['type="button"','value',6,'Button with no default action (for JavaScript).','<button type="button">']
+];
+</script>
+<style>
+:root{
+  --bg:#f5f6fa; --card:#ffffff; --ink:#1b2130; --mute:#5f6b82; --line:#dfe3ec;
+  --acc:#4338ca; --acc-ink:#ffffff; --acc-soft:#eceefe;
+  --ok:#15803d; --ok-bg:#e6f6ec; --bad:#c62828; --bad-bg:#fdeaea; --warn:#b45309; --warn-bg:#fff4e0;
+  --code-bg:#f2f4f9; --tn:#b0205c; --an:#9a4a00; --av:#0b7447; --pn:#7c869b; --cm:#7c869b; --dt:#6a38c2; --rw:#445066;
+  --shadow:0 1px 2px rgba(20,30,60,.06),0 6px 18px rgba(20,30,60,.06);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+:root[data-theme="dark"]{
+  --bg:#0f121a; --card:#171b26; --ink:#e7eaf3; --mute:#9aa5bd; --line:#2a3144;
+  --acc:#8b8cff; --acc-ink:#0f121a; --acc-soft:#242850;
+  --ok:#4ade80; --ok-bg:#12301f; --bad:#ff7b7b; --bad-bg:#3a1a1e; --warn:#fbbf24; --warn-bg:#3a2e12;
+  --code-bg:#11141d; --tn:#ff7ab2; --an:#ffb86b; --av:#7ee2a8; --pn:#7d879f; --cm:#7d879f; --dt:#c3a2ff; --rw:#a8b3c9;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+code{font-family:var(--mono);font-size:.88em;background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:.05em .35em}
+button{font:inherit;color:inherit;cursor:pointer}
+h1,h2,h3{line-height:1.25;margin:0 0 .5em}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+.brand{font:700 1.15rem var(--mono);letter-spacing:-.02em}
+.brand span{color:var(--acc)}
+.tabs{display:flex;gap:4px}
+.tabs button{border:0;background:none;padding:7px 14px;border-radius:8px;color:var(--mute);font-weight:600}
+.tabs button:hover{background:var(--acc-soft)}
+.tabs button.on{background:var(--acc-soft);color:var(--acc)}
+.stats{margin-left:auto;display:flex;align-items:center;gap:14px}
+.overall{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--mute)}
+.bar{width:140px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .4s}
+.pts{font-weight:700}
+.pts b{color:var(--acc)}
+#theme{border:1px solid var(--line);background:var(--card);border-radius:8px;width:36px;height:34px;font-size:1.1rem}
+#theme:hover{background:var(--acc-soft)}
+
+main{max-width:1100px;margin:0 auto;padding:22px 20px 60px}
+.view[hidden]{display:none}
+.btn{border:1px solid var(--line);background:var(--card);padding:8px 16px;border-radius:9px;font-weight:600}
+.btn:hover{border-color:var(--acc)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:none}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.muted{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+
+/* level map */
+.lead{max-width:70ch;color:var(--mute);margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.lvl{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);min-height:140px}
+.lvl:not(:disabled):hover{border-color:var(--acc);transform:translateY(-1px)}
+.lvl:disabled{opacity:.55;cursor:not-allowed}
+.lvl .n{font:700 .8rem var(--mono);color:var(--acc)}
+.lvl h3{margin:0;font-size:1.05rem}
+.lvl p{margin:0;color:var(--mute);font-size:.85rem}
+.lvl .st{margin-top:auto;font-size:.85rem;font-weight:600}
+.lvl.done{border-color:var(--ok)}
+.lvl.done .st{color:var(--ok)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0}
+
+/* lesson */
+.lesson{display:grid;gap:18px}
+.lesson .intro p,.lesson .intro ul{max-width:75ch;margin:.5em 0}
+.lesson .intro li{margin:.25em 0}
+.hint{font-size:.85rem;color:var(--mute);margin:0 0 8px}
+.exwrap{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:820px){.exwrap{grid-template-columns:1fr}}
+.pv{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;display:block}
+.pvlabel{font-size:.78rem;color:var(--mute);margin:0 0 4px;text-transform:uppercase;letter-spacing:.06em}
+
+/* code */
+.codewrap{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:430px;font:13.5px/1.6 var(--mono)}
+.code{padding:8px 0;min-width:max-content}
+.cl{display:flex;padding:0 12px 0 0;white-space:pre}
+.cl .ln{flex:none;width:3.2ch;margin-right:1.2ch;padding-left:.8ch;text-align:right;color:var(--pn);opacity:.7;user-select:none}
+.cl .lc{flex:1}
+.pn{color:var(--pn)}.tn{color:var(--tn);font-weight:600}.an{color:var(--an)}.av{color:var(--av)}
+.cm{color:var(--cm);font-style:italic}.dt{color:var(--dt)}.rw{color:var(--rw)}
+pre.mini{margin:0;padding:8px 10px;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;font:12.5px/1.5 var(--mono);overflow:auto;white-space:pre}
+.annot [data-tag]{cursor:help}
+.hov{background:rgba(99,102,241,.22);border-radius:3px}
+.clickable [data-sel],.annot [data-tag]{border-radius:3px}
+.clickable [data-sel]{cursor:pointer}
+.lineclick .cl{cursor:pointer}
+.lineclick .cl:hover{background:rgba(99,102,241,.14)}
+.hl{background:var(--warn-bg);outline:1.5px solid var(--warn);border-radius:3px}
+.ok{background:var(--ok-bg)!important;outline:1.5px solid var(--ok);border-radius:3px}
+.bad{background:var(--bad-bg)!important;outline:1.5px solid var(--bad);border-radius:3px}
+.cl.ok,.cl.bad{border-radius:0}
+
+#tip{position:fixed;z-index:50;max-width:340px;padding:9px 12px;border-radius:9px;background:#10131c;color:#eef1f8;font-size:.85rem;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none}
+#tip[hidden]{display:none}
+#tip code{background:#232a3d;border-color:#334;color:#cfe}
+#tip i{opacity:.7}
+
+/* demo */
+.demo{display:grid;gap:10px}
+.demo .drow{display:flex;gap:14px;flex-wrap:wrap}
+.demo label{display:flex;gap:6px;align-items:center;font-size:.9rem}
+.demo input,.demo select{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);max-width:170px}
+.demo .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:760px){.demo .cols{grid-template-columns:1fr}}
+.addr{font:13px var(--mono);padding:6px 10px;border:1px solid var(--line);border-radius:99px;background:var(--bg);word-break:break-all}
+
+/* quiz */
+.qtop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.qtitle{font-weight:700}
+.hud{margin-left:auto;display:flex;gap:16px;align-items:center;font-weight:600;font-size:.95rem}
+.lives{color:var(--bad);letter-spacing:2px;font-size:1.1rem}
+.lives .off{opacity:.25}
+.qprog{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:14px}
+.qprog i{display:block;height:100%;background:var(--acc);transition:width .3s}
+.badge{display:inline-block;font:700 .72rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--acc);background:var(--acc-soft);padding:3px 9px;border-radius:99px;margin-bottom:8px}
+.qtext{font-size:1.1rem;font-weight:600;margin:0 0 12px}
+.qbody{display:grid;gap:12px}
+.sub{font-size:.85rem;color:var(--mute)}
+.choices{display:grid;gap:8px}
+.choices.tree2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.choice{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+.choice:hover{border-color:var(--acc);background:var(--acc-soft)}
+.key{flex:none;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:6px;background:var(--acc-soft);color:var(--acc);font:700 .78rem var(--mono)}
+.choice .ct{flex:1;min-width:0}
+.choice.ok{border-color:var(--ok);background:var(--ok-bg)!important}
+.choice.bad{border-color:var(--bad);background:var(--bad-bg)!important}
+pre.tree{margin:0;font:13px/1.45 var(--mono);white-space:pre;overflow:auto}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.pcard{position:relative;border:2px solid var(--line);border-radius:12px;padding:6px;background:var(--card);cursor:pointer}
+.pcard:hover{border-color:var(--acc)}
+.pcard .key{position:absolute;top:10px;left:10px;z-index:2}
+.pcard.ok{border-color:var(--ok);box-shadow:0 0 0 3px var(--ok-bg)}
+.pcard.bad{border-color:var(--bad);box-shadow:0 0 0 3px var(--bad-bg)}
+.shield{position:absolute;inset:0;z-index:1}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:760px){.match{grid-template-columns:1fr}}
+.mleft,.mright{display:grid;gap:10px;align-content:start}
+.mitem{position:relative;border:2px solid var(--line);border-radius:10px;padding:6px;background:var(--card);cursor:pointer}
+.mitem:hover{border-color:var(--acc)}
+.mitem.sel{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+.mitem.done{border-color:var(--ok);background:var(--ok-bg);cursor:default}
+.mnum{position:absolute;top:-9px;right:-9px;z-index:3;width:22px;height:22px;border-radius:50%;background:var(--ok);color:var(--bg);font:700 .75rem var(--mono);display:grid;place-items:center}
+.mprev{padding:4px}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.mstatus{font-size:.85rem;color:var(--bad);min-height:1.2em}
+.live{border:1px dashed var(--acc);border-radius:12px;padding:12px;display:grid;gap:8px}
+.lstatus{font-weight:600}
+.lstatus.s1{color:var(--ok)}.lstatus.s2{color:var(--bad)}
+.fb{margin-top:14px;padding:14px 16px;border-radius:12px;border:1.5px solid}
+.fb.ok{background:var(--ok-bg);border-color:var(--ok)}
+.fb.bad{background:var(--bad-bg);border-color:var(--bad)}
+.fb p{margin:.3em 0 .8em}
+.fb .t{font-weight:700}
+.fb.ok .t{color:var(--ok)}.fb.bad .t{color:var(--bad)}
+.fb.ok,.fb.bad{outline:0}
+.fb *{background:none}
+.result{text-align:center;display:grid;gap:10px;justify-items:center;padding:30px 20px}
+.result .big{font:800 3.2rem var(--mono);color:var(--acc)}
+.result.fail .big{color:var(--bad)}
+.result.pass .big{color:var(--ok)}
+.stat3{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;color:var(--mute)}
+.stat3 b{display:block;font-size:1.4rem;color:var(--ink)}
+
+/* playground */
+.pgbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.pgbar select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.pgsplit{display:grid;grid-template-columns:1fr 1fr;gap:14px;height:min(70vh,640px)}
+@media(max-width:820px){.pgsplit{grid-template-columns:1fr;height:auto}.pgleft{height:320px}.pgright{height:320px}}
+.pgleft{display:flex;flex-direction:column;min-height:0;gap:8px}
+.pgedit{position:relative;flex:1;min-height:0;background:var(--code-bg);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#pghl,#pgta{position:absolute;inset:0;margin:0;padding:12px;border:0;font:13.5px/1.6 var(--mono);white-space:pre;tab-size:2;letter-spacing:0;word-spacing:0}
+#pghl{overflow:hidden;color:var(--ink)}
+#pgta{background:transparent;color:transparent;caret-color:var(--ink);resize:none;outline:none;overflow:auto;width:100%;height:100%}
+#pgta::selection{background:rgba(99,102,241,.3);color:transparent}
+.pgon{background:rgba(245,158,11,.35);border-radius:3px}
+.pginfo{font-size:.85rem;color:var(--mute);min-height:2.6em}
+.pgright{min-height:0}
+#pgframe{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;background:#fff}
+
+/* cheat sheet */
+.csearch{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.csearch input[type=search]{flex:1;min-width:220px;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+.chips{display:flex;gap:6px}
+.chips button{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 12px;font-size:.85rem}
+.chips button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.ccard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;align-content:start}
+.ccard p{margin:0;font-size:.92rem}
+.chead{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cname{font-weight:700;font-size:.95rem;color:var(--tn)}
+.chip{font:700 .66rem var(--mono);text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:99px;background:var(--acc-soft);color:var(--acc)}
+.chip.lv{background:var(--code-bg);color:var(--mute)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">&lt;/&gt; Read<span>HTML</span></div>
+  <nav class="tabs" aria-label="Sections">
+    <button data-tab="learn" class="on">Levels</button>
+    <button data-tab="play">Playground</button>
+    <button data-tab="cheat">Cheat sheet</button>
+  </nav>
+  <div class="stats">
+    <div class="overall" title="Levels passed"><div class="bar"><i id="gbar"></i></div><span id="gtxt">0/10</span></div>
+    <span class="pts">★ <b id="gscore">0</b></span>
+    <button id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
+  </div>
+</header>
+<main>
+  <section id="v-learn" class="view"></section>
+  <section id="v-play" class="view" hidden></section>
+  <section id="v-cheat" class="view" hidden></section>
+</main>
+<div id="tip" role="tooltip" hidden></div>
+<script>
+(function () {
+'use strict';
+
+/* ================= helpers ================= */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// Tiny inline markup: `code`, **bold**, *italic*
+const fmt = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*]+)\*/g, '<i>$1</i>');
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const norm0 = s => String(s).replace(/^\n/, '').replace(/\s+$/, '');
+const normSel = s => (/:\d+$/.test(s) ? s : s + ':1');
+const KEYS = 'ABCDEFG';
+
+/* ================= course bookkeeping ================= */
+const LV = {}, QMAP = {};
+COURSE.levels.forEach(L => {
+  LV[L.id] = L;
+  L.questions.forEach((q, i) => { q.id = q.id || (L.id + '-' + (i + 1)); q.level = L.id; QMAP[q.id] = q; });
+});
+const getCode = q => norm0(q.code === '@shared' ? LV[q.level].shared : q.code);
+
+/* ================= storage (safe) ================= */
+const KEY = 'readhtml.progress.v1';
+let store = { levels: {}, wrong: [], theme: null };
+try { const raw = localStorage.getItem(KEY); if (raw) store = Object.assign(store, JSON.parse(raw)); } catch (e) { /* storage blocked: stay in memory */ }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* ignore */ } };
+
+/* ================= HTML tokenizer ================= */
+const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+const RE_TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)/y;
+const RE_ATTR = /([^\s"'<>\/=]+)(?:(\s*=\s*)("[^"]*"|'[^']*'|[^\s"'<>`=]+))?/y;
+
+function tokenize(src) {
+  const toks = [], n = src.length, cnt = {}, stack = [], low = src.toLowerCase();
+  let i = 0, ts = 0, pg = 0;
+  const flush = e => { if (e > ts) toks.push({ type: 'text', start: ts, end: e }); };
+  const nth = k => (cnt[k] = (cnt[k] || 0) + 1);
+  while (i < n) {
+    if (src[i] !== '<') { i++; continue; }
+    if (src.startsWith('<!--', i)) {
+      flush(i); let e = src.indexOf('-->', i + 4); e = e < 0 ? n : e + 3;
+      toks.push({ type: 'comment', start: i, end: e }); i = ts = e; continue;
+    }
+    if (/^<!doctype/i.test(src.substr(i, 9))) {
+      flush(i); let e = src.indexOf('>', i); e = e < 0 ? n : e + 1;
+      toks.push({ type: 'doctype', name: '!doctype', start: i, end: e }); i = ts = e; continue;
+    }
+    RE_TAG.lastIndex = i;
+    const m = RE_TAG.exec(src);
+    if (!m) { i++; continue; }
+    flush(i);
+    const close = !!m[1], name = m[2].toLowerCase();
+    const t = { type: close ? 'close' : 'open', name, start: i, attrs: [], pair: -1 };
+    let j = i + m[0].length;
+    for (;;) {
+      while (j < n && /\s/.test(src[j])) j++;
+      if (j >= n) { t.closeStart = n; break; }
+      if (src[j] === '>') { t.closeStart = j; j++; break; }
+      if (src[j] === '/' && src[j + 1] === '>') { t.closeStart = j; t.self = true; j += 2; break; }
+      RE_ATTR.lastIndex = j;
+      const am = RE_ATTR.exec(src);
+      if (!am) { j++; continue; }
+      const a = { name: am[1].toLowerCase(), ns: j, ne: j + am[1].length };
+      if (am[2]) {
+        a.es = a.ne; a.ee = a.ne + am[2].length; a.vs = a.ee; a.ve = a.vs + am[3].length;
+        a.value = am[3].replace(/^["']|["']$/g, '');
+      }
+      a.sel = '@' + a.name + ':' + nth('@' + a.name);
+      t.attrs.push(a);
+      j += am[0].length;
+    }
+    t.end = j;
+    if (!close) {
+      t.sel = name + ':' + nth(name);
+      t.pg = pg++;
+      if (!VOID.has(name) && !t.self) stack.push(t);
+    } else {
+      t.sel = '/' + name + ':' + nth('/' + name);
+      for (let k = stack.length - 1; k >= 0; k--) {
+        if (stack[k].name === name) { t.pair = stack[k].pg; stack.length = k; break; }
+      }
+    }
+    toks.push(t);
+    i = ts = j;
+    if (!close && (name === 'script' || name === 'style') && !t.self) {
+      let e = low.indexOf('</' + name, j); if (e < 0) e = n;
+      if (e > j) toks.push({ type: 'raw', start: j, end: e });
+      i = ts = e;
+    }
+  }
+  flush(n);
+  return toks;
+}
+
+/* ================= syntax highlighter =================
+   Returns line-numbered HTML, or flat spans when o.flat.
+   o.hl: selector to mark   o.tips: add tooltip data   o.pg: playground ids */
+function highlight(src, o) {
+  o = o || {};
+  const toks = tokenize(src);
+  const lines = [''];
+  const emit = (text, cls, at) => {
+    text.split('\n').forEach((p, k) => {
+      if (k) lines.push('');
+      if (p) lines[lines.length - 1] += '<span class="' + cls + '"' + at + '>' + esc(p) + '</span>';
+    });
+  };
+  let hlA = -1, hlB = -1;
+  if (o.hl) {
+    const sel = normSel(o.hl);
+    toks.forEach((t, ti) => { if (t.type === 'open' && t.sel === sel) { hlA = ti; } });
+    if (hlA >= 0) { const pg = toks[hlA].pg; toks.forEach((t, ti) => { if (t.type === 'close' && t.pair === pg) hlB = ti; }); }
+  }
+  toks.forEach((t, ti) => {
+    if (t.type !== 'open' && t.type !== 'close') {
+      const cls = { comment: 'cm', doctype: 'dt', raw: 'rw', text: 'tx' }[t.type];
+      const at = (t.type === 'doctype' && o.tips) ? ' data-tag="!doctype"' : '';
+      emit(src.slice(t.start, t.end), cls, at);
+      return;
+    }
+    let cur = t.start;
+    const base = ' data-sel="' + t.sel + '" data-t="' + ti + '"'
+      + (o.tips ? ' data-tag="' + t.name + '"' : '')
+      + (o.pg ? ' data-pg="' + (t.type === 'open' ? t.pg : t.pair) + '"' : '');
+    const hl = (ti === hlA || ti === hlB) ? ' hl' : '';
+    const add = (s, e, cls, a) => {
+      if (s > cur) emit(src.slice(cur, s), 'tx' + hl, base);
+      let at = base;
+      if (a) at += ' data-asel="' + a.sel + '"' + (o.tips ? ' data-attr="' + a.name + '"' : '');
+      emit(src.slice(s, e), cls + hl, at);
+      cur = e;
+    };
+    const lt = t.type === 'open' ? 1 : 2;
+    add(t.start, t.start + lt, 'pn');
+    add(t.start + lt, t.start + lt + t.name.length, 'tn');
+    t.attrs.forEach(a => {
+      add(a.ns, a.ne, 'an', a);
+      if (a.vs != null) { add(a.es, a.ee, 'pn', a); add(a.vs, a.ve, 'av', a); }
+    });
+    add(t.closeStart, t.end, 'pn');
+  });
+  if (o.flat) return lines.join('\n');
+  return '<div class="code">' + lines.map((h, i) =>
+    '<div class="cl" data-line="' + (i + 1) + '"><span class="ln">' + (i + 1) + '</span><span class="lc">' + (h || ' ') + '</span></div>').join('') + '</div>';
+}
+
+/* ================= tree notation ================= */
+function parseTree(s) {
+  let i = 0;
+  function node() {
+    const st = i;
+    while (i < s.length && !'(),'.includes(s[i])) i++;
+    const name = s.slice(st, i).trim(), kids = [];
+    if (s[i] === '(') { i++; for (;;) { kids.push(node()); if (s[i] === ',') { i++; continue; } break; } i++; }
+    return { name, kids };
+  }
+  return node();
+}
+function treeText(root) {
+  const out = [root.name];
+  (function rec(n, pre) {
+    n.kids.forEach((k, i) => {
+      const last = i === n.kids.length - 1;
+      out.push(pre + (last ? '└─ ' : '├─ ') + k.name);
+      rec(k, pre + (last ? '   ' : '│  '));
+    });
+  })(root, '');
+  return out.join('\n');
+}
+
+/* ================= preview frames ================= */
+const PV_CSS = 'body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;margin:8px;color:#111;background:#fff}table,td,th{border:1px solid #888;border-collapse:collapse}td,th{padding:2px 8px}';
+const previewDoc = h => '<!DOCTYPE html><meta charset="utf-8"><style>' + PV_CSS + '</style>' + h;
+function frame(html, height, sandbox, raw) {
+  const f = document.createElement('iframe');
+  f.className = 'pv';
+  f.setAttribute('sandbox', sandbox || 'allow-scripts');
+  f.style.height = (height || 120) + 'px';
+  f.title = 'Rendered preview';
+  f.srcdoc = raw ? html : previewDoc(html);
+  return f;
+}
+// One message listener for every frame that talks back to the page
+const msgHandlers = [];
+window.addEventListener('message', e => msgHandlers.forEach(fn => fn(e)));
+
+/* ================= cheat sheet lookup / tooltips ================= */
+const CH = {};
+CHEAT.forEach(r => (r[5] || [r[0]]).forEach(n => { CH[r[1] + ':' + n.toLowerCase()] = r; }));
+function tipFor(tag, attr, notes) {
+  notes = notes || {};
+  if (attr) {
+    const note = notes[tag + '@' + attr] || notes['@' + attr];
+    const r = CH['attr:' + attr];
+    return '<b>' + esc(attr) + '</b> <i>attribute of &lt;' + esc(tag) + '&gt;</i><br>' + fmt(note || (r ? r[3] : 'An attribute of this element.'));
+  }
+  const r = CH['tag:' + tag];
+  const label = tag === '!doctype' ? '&lt;!DOCTYPE html&gt;' : '&lt;' + esc(tag) + '&gt;';
+  return '<b>' + label + '</b><br>' + fmt(notes[tag] || (r ? r[3] : 'An HTML element.'));
+}
+const tip = $('#tip');
+let tipNotes = null;
+function hoverGroup(box, target) {
+  $$('.hov', box).forEach(x => x.classList.remove('hov'));
+  if (!target) return;
+  const a = target.closest('[data-asel]');
+  const peers = a ? $$('[data-asel="' + a.dataset.asel + '"]', box) : $$('[data-t="' + target.dataset.t + '"]', box);
+  peers.forEach(x => x.classList.add('hov'));
+}
+document.addEventListener('mouseover', e => {
+  const t = e.target.closest && e.target.closest('.annot [data-tag]');
+  const box = t && t.closest('.annot');
+  if (!t) { tip.hidden = true; $$('.annot .hov').forEach(x => x.classList.remove('hov')); return; }
+  tip.innerHTML = tipFor(t.dataset.tag, t.dataset.attr, box._notes);
+  tip.hidden = false;
+  hoverGroup(box, t);
+});
+document.addEventListener('mousemove', e => {
+  if (tip.hidden) return;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = e.clientX + 14, y = e.clientY + 16;
+  if (x + w > innerWidth - 8) x = e.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = e.clientY - h - 14;
+  tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+});
+
+/* ================= theme + header stats ================= */
+function applyTheme(t) { document.documentElement.dataset.theme = t; }
+applyTheme(store.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+$('#theme').onclick = () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(next); store.theme = next; save();
+};
+function updateStats() {
+  const passed = COURSE.levels.filter(L => store.levels[L.id] && store.levels[L.id].passed).length;
+  const total = COURSE.levels.reduce((s, L) => s + ((store.levels[L.id] || {}).bestScore || 0), 0);
+  $('#gbar').style.width = (passed / COURSE.levels.length * 100) + '%';
+  $('#gtxt').textContent = passed + '/' + COURSE.levels.length + ' levels';
+  $('#gscore').textContent = total;
+}
+const isUnlocked = i => i === 0 || !!(store.levels[COURSE.levels[i - 1].id] || {}).passed;
+
+/* ================= tabs ================= */
+let S = { mode: 'map' };
+function setTab(t) {
+  ['learn', 'play', 'cheat'].forEach(x => { $('#v-' + x).hidden = x !== t; });
+  $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  if (t === 'play') initPlayground();
+  if (t === 'cheat') initCheat();
+}
+$$('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+
+/* ================= level map ================= */
+function showLevels() {
+  S = { mode: 'map' };
+  setTab('learn');
+  const v = $('#v-learn'); v.innerHTML = '';
+  v.append(el('h2', '', 'Learn to read HTML'));
+  v.append(el('p', 'lead', 'Ten short levels. Each one opens with a lesson, then a quiz of mixed exercises. Finish a level with at least 70% and no lives lost to unlock the next one. You lose a life on each wrong answer (3 per level).'));
+  const g = el('div', 'grid');
+  COURSE.levels.forEach((L, i) => {
+    const r = store.levels[L.id] || {};
+    const open = isUnlocked(i);
+    const b = el('button', 'lvl' + (r.passed ? ' done' : ''));
+    b.disabled = !open;
+    b.innerHTML = '<span class="n">LEVEL ' + (i + 1) + '</span><h3>' + esc(L.title) + '</h3><p>' + esc(L.blurb) + '</p><span class="st">' +
+      (!open ? '🔒 Locked: pass level ' + i + ' first' : r.passed ? '✓ Passed · best ' + r.best + '%' : r.attempts ? 'Best so far ' + (r.best || 0) + '%' : 'Ready') + '</span>';
+    b.onclick = () => showLesson(i);
+    g.append(b);
+  });
+  v.append(g);
+  const row = el('div', 'row');
+  const nWrong = store.wrong.filter(id => QMAP[id]).length;
+  const rv = el('button', 'btn primary', 'Review mistakes (' + nWrong + ')');
+  rv.disabled = !nWrong;
+  rv.onclick = () => startQuiz(0, true);
+  const rs = el('button', 'btn ghost', 'Reset progress');
+  let armed = false;
+  rs.onclick = () => {
+    if (!armed) { armed = true; rs.textContent = 'Click again to erase all progress'; setTimeout(() => { armed = false; rs.textContent = 'Reset progress'; }, 3000); return; }
+    store.levels = {}; store.wrong = []; save(); updateStats(); showLevels();
+  };
+  row.append(rv, rs);
+  v.append(row);
+  updateStats();
+}
+
+/* ================= lesson page ================= */
+function lessonHTML(arr) {
+  let out = '', list = false;
+  arr.forEach(p => {
+    if (p.startsWith('- ')) { if (!list) { out += '<ul>'; list = true; } out += '<li>' + fmt(p.slice(2)) + '</li>'; }
+    else { if (list) { out += '</ul>'; list = false; } out += '<p>' + fmt(p) + '</p>'; }
+  });
+  return out + (list ? '</ul>' : '');
+}
+function exampleBlock(L, ex, title) {
+  const w = el('div', 'card');
+  if (title) w.append(el('h3', '', esc(title)));
+  w.append(el('p', 'hint', 'Hover over any tag, attribute or value to see what it does.'));
+  const wrap = el('div', 'exwrap');
+  const code = norm0(ex.code === '@shared' ? L.shared : ex.code);
+  const cw = el('div', 'codewrap annot');
+  cw.innerHTML = highlight(code, { tips: true });
+  cw._notes = ex.notes;
+  const right = el('div');
+  right.append(el('div', 'pvlabel', 'What the browser draws'));
+  right.append(frame(code, ex.h || 200));
+  wrap.append(cw, right);
+  w.append(wrap);
+  return w;
+}
+function demoRequest() {
+  const box = el('div', 'card demo');
+  box.innerHTML = '<h3>Try it: what does the browser send?</h3>' +
+    '<div class="drow"><label>method <select id="dm"><option>get</option><option>post</option></select></label>' +
+    '<label>action <input id="da" value="/search"></label>' +
+    '<label>user types q <input id="d1" value="red shoes"></label>' +
+    '<label>hidden page <input id="d2" value="2"></label></div>' +
+    '<div class="cols"><div><div class="pvlabel">The form</div><div class="codewrap" id="dcode"></div></div>' +
+    '<div><div class="pvlabel">Address bar after Submit</div><div class="addr" id="daddr"></div>' +
+    '<div class="pvlabel" style="margin-top:10px">Request on the wire</div><pre class="mini" id="dreq"></pre></div></div>';
+  const upd = () => {
+    const m = $('#dm', box).value, a = $('#da', box).value || '/', q = $('#d1', box).value, p = $('#d2', box).value;
+    $('#dcode', box).innerHTML = highlight('<form action="' + a + '" method="' + m + '">\n  <input type="text" name="q">\n  <input type="hidden" name="page" value="' + p + '">\n  <button type="submit">Go</button>\n</form>');
+    const qs = new URLSearchParams({ q: q, page: p }).toString();
+    if (m === 'get') {
+      $('#daddr', box).textContent = 'https://example.com' + a + '?' + qs;
+      $('#dreq', box).textContent = 'GET ' + a + '?' + qs + ' HTTP/1.1\nHost: example.com';
+    } else {
+      $('#daddr', box).textContent = 'https://example.com' + a;
+      $('#dreq', box).textContent = 'POST ' + a + ' HTTP/1.1\nHost: example.com\nContent-Type: application/x-www-form-urlencoded\n\n' + qs;
+    }
+  };
+  $$('select,input', box).forEach(i => i.oninput = upd);
+  upd();
+  return box;
+}
+function showLesson(i) {
+  const L = COURSE.levels[i];
+  S = { mode: 'lesson', li: i };
+  const v = $('#v-learn'); v.innerHTML = '';
+  const row = el('div', 'row');
+  const back = el('button', 'btn ghost', '← All levels'); back.onclick = showLevels;
+  row.append(back); v.append(row);
+  const wrap = el('div', 'lesson');
+  const head = el('div', 'card');
+  head.innerHTML = '<span class="badge">Level ' + (i + 1) + '</span><h2>' + esc(L.title) + '</h2><div class="intro">' + lessonHTML(L.intro) + '</div>';
+  wrap.append(head);
+  if (L.demo === 'request') wrap.append(demoRequest());
+  wrap.append(exampleBlock(L, L.example, L.id === 'L10' ? 'The page you will be quizzed on' : 'Annotated example'));
+  if (L.example2) wrap.append(exampleBlock(L, L.example2, L.example2.title));
+  const go = el('div', 'row');
+  const start = el('button', 'btn primary', 'Start quiz (' + L.questions.length + ' questions) →');
+  start.onclick = () => startQuiz(i, false);
+  go.append(start);
+  wrap.append(go);
+  v.append(wrap);
+  window.scrollTo(0, 0);
+}
+
+/* ================= quiz engine ================= */
+const LABEL = { render: 'What does this render?', click: 'Click the element', parent: 'Find the parent', bug: 'Spot the bug', match: 'Match', tree: 'Tree view', happens: 'What happens?', versus: 'This vs that', choice: 'Quick question', form: 'Predict, then try it' };
+
+function startQuiz(li, review) {
+  const L = COURSE.levels[li];
+  let qs;
+  if (review) { qs = shuffle(store.wrong.map(id => QMAP[id]).filter(Boolean)); if (!qs.length) return; }
+  else qs = L.questions.slice();
+  S = { mode: 'quiz', li, L, review, qs, qi: 0, lives: review ? Infinity : COURSE.lives, score: 0, streak: 0, maxStreak: 0, correct: 0, answered: false };
+  showQuestion();
+}
+function hudLives() {
+  if (S.review) return '∞';
+  let h = '';
+  for (let i = 0; i < COURSE.lives; i++) h += '<span class="' + (i < S.lives ? '' : 'off') + '">♥</span>';
+  return h;
+}
+function updateHud() {
+  S.hud.innerHTML = '<span class="lives" title="Lives">' + hudLives() + '</span><span>Score <b>' + S.score + '</b></span><span title="Current streak">🔥 ' + S.streak + '</span>';
+}
+function showQuestion() {
+  const v = $('#v-learn'); v.innerHTML = '';
+  const q = S.qs[S.qi]; S.answered = false;
+  const top = el('div', 'qtop');
+  const back = el('button', 'btn ghost', '← Levels'); back.onclick = showLevels;
+  const title = el('div', 'qtitle', S.review ? 'Review mistakes' : 'Level ' + (S.li + 1) + ' · ' + esc(S.L.title));
+  S.hud = el('div', 'hud');
+  top.append(back, title, S.hud);
+  const prog = el('div', 'qprog'); prog.innerHTML = '<i style="width:' + (S.qi / S.qs.length * 100) + '%"></i>';
+  const card = el('div', 'card');
+  const where = S.review ? ' · ' + LV[q.level].title : '';
+  card.append(el('span', 'badge', (LABEL[q.type] || 'Question') + where + ' · ' + (S.qi + 1) + '/' + S.qs.length));
+  card.append(el('p', 'qtext', fmt(q.q)));
+  const body = el('div', 'qbody');
+  card.append(body);
+  S.fb = el('div'); card.append(S.fb);
+  v.append(top, prog, card);
+  updateHud();
+  BUILD[q.type](q, body, ok => finish(q, ok));
+  window.scrollTo(0, 0);
+}
+function finish(q, ok) {
+  if (S.answered) return;
+  S.answered = true;
+  let msg = '';
+  if (ok) {
+    S.streak++; S.maxStreak = Math.max(S.maxStreak, S.streak); S.correct++;
+    const bonus = Math.min(S.streak - 1, 5) * 2, pts = 10 + bonus;
+    S.score += pts;
+    msg = '+' + pts + ' points' + (bonus ? ' (streak ×' + S.streak + ' bonus +' + bonus + ')' : '');
+    store.wrong = store.wrong.filter(x => x !== q.id);
+  } else {
+    S.streak = 0;
+    if (!S.review) S.lives--;
+    if (!store.wrong.includes(q.id)) store.wrong.push(q.id);
+    msg = S.review ? 'It stays in your review list.' : (S.lives > 0 ? S.lives + ' ' + (S.lives === 1 ? 'life' : 'lives') + ' left' : 'No lives left!');
+  }
+  save(); updateHud();
+  const out = S.lives <= 0 || S.qi + 1 >= S.qs.length;
+  S.fb.innerHTML = '';
+  const fb = el('div', 'fb ' + (ok ? 'ok' : 'bad'));
+  fb.innerHTML = '<div class="t">' + (ok ? '✓ Correct' : '✗ Not quite') + ' <span class="muted" style="font-weight:500">· ' + msg + '</span></div><p>' + fmt(q.why) + '</p>';
+  const nx = el('button', 'btn primary', out ? 'See result →' : 'Next question →');
+  nx.onclick = () => { S.qi++; if (out) showResult(); else showQuestion(); };
+  fb.append(nx);
+  S.fb.append(fb);
+  nx.focus({ preventScroll: true });
+  fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function showResult() {
+  const n = S.qs.length, answered = S.qi, pct = Math.round(S.correct / n * 100);
+  const outOfLives = S.lives <= 0;
+  const passed = !S.review && !outOfLives && S.correct / n >= COURSE.passMark;
+  if (!S.review) {
+    const r = store.levels[S.L.id] || (store.levels[S.L.id] = { best: 0, bestScore: 0, passed: false, attempts: 0 });
+    r.attempts++;
+    if (!outOfLives) { r.best = Math.max(r.best, pct); r.bestScore = Math.max(r.bestScore, S.score); }
+    if (passed) r.passed = true;
+    save();
+  }
+  updateStats();
+  const v = $('#v-learn'); v.innerHTML = '';
+  const box = el('div', 'card result ' + (S.review ? '' : passed ? 'pass' : 'fail'));
+  const title = S.review ? 'Review finished' : passed ? (S.L.id === 'L10' ? 'Course complete! 🎉' : 'Level passed!') : outOfLives ? 'Out of lives' : 'Not quite 70% yet';
+  box.innerHTML = '<h2>' + title + '</h2><div class="big">' + (outOfLives ? S.correct + '/' + answered : pct + '%') + '</div>' +
+    '<div class="stat3"><span><b>' + S.correct + '/' + (outOfLives ? answered : n) + '</b>correct</span><span><b>' + S.score + '</b>points</span><span><b>' + S.maxStreak + '</b>best streak</span></div>' +
+    '<p class="muted">' + (S.review ? 'Questions you got right are removed from your review list.' :
+      passed ? 'The next level is unlocked.' : outOfLives ? 'Three wrong answers end the attempt. Re-read the lesson and try again.' : 'You need at least 70% to unlock the next level.') + '</p>';
+  const row = el('div', 'row'); row.style.justifyContent = 'center';
+  if (!S.review) {
+    const retry = el('button', 'btn', 'Retry level'); retry.onclick = () => startQuiz(S.li, false); row.append(retry);
+    if (passed && COURSE.levels[S.li + 1]) { const nx = el('button', 'btn primary', 'Next level →'); nx.onclick = () => showLesson(S.li + 1); row.append(nx); }
+  }
+  const mistakes = store.wrong.filter(id => QMAP[id]).length;
+  if (mistakes) { const rv = el('button', 'btn', 'Review mistakes (' + mistakes + ')'); rv.onclick = () => startQuiz(0, true); row.append(rv); }
+  const map = el('button', 'btn ghost', 'All levels'); map.onclick = showLevels; row.append(map);
+  box.append(row);
+  v.append(box);
+  window.scrollTo(0, 0);
+}
+
+/* ================= question builders ================= */
+const BUILD = {};
+const codeBox = (code, o) => { const c = el('div', 'codewrap'); c.innerHTML = highlight(code, o); return c; };
+
+function choices(opts, ans, render, done, keep) {
+  const items = opts.map((o, i) => ({ o, i }));
+  const list = keep ? items : shuffle(items);
+  const box = el('div', 'choices'), bs = [];
+  list.forEach((it, k) => {
+    const b = el('button', 'choice', '<span class="key">' + KEYS[k] + '</span><span class="ct">' + render(it.o) + '</span>');
+    b.onclick = () => {
+      if (S.answered) return;
+      bs.forEach((x, j) => { if (list[j].i === ans) x.classList.add('ok'); });
+      if (it.i !== ans) b.classList.add('bad');
+      done(it.i === ans);
+    };
+    bs.push(b); box.append(b);
+  });
+  return box;
+}
+BUILD.choice = BUILD.happens = BUILD.versus = (q, body, done) => {
+  if (q.code) body.append(codeBox(getCode(q)));
+  body.append(choices(q.options, q.answer, fmt, done));
+};
+BUILD.parent = (q, body, done) => {
+  const box = codeBox(getCode(q), { hl: q.target });
+  body.append(box);
+  const h = $('.hl', box);
+  if (h) setTimeout(() => { box.scrollTop = Math.max(0, h.closest('.cl').offsetTop - 80); }, 0);
+  body.append(choices(q.options, q.answer, fmt, done));
+};
+BUILD.tree = (q, body, done) => {
+  body.append(codeBox(getCode(q)));
+  const c = choices(q.options, q.answer, o => '<pre class="tree">' + esc(treeText(parseTree(o))) + '</pre>', done);
+  c.classList.add('tree2');
+  body.append(c);
+};
+BUILD.render = (q, body, done) => {
+  body.append(codeBox(getCode(q)));
+  body.append(el('div', 'sub', 'Which preview does this code produce?'));
+  const opts = shuffle([{ h: getCode(q), ok: true }].concat(q.wrong.map(h => ({ h })))), cards = [];
+  const grid = el('div', 'pgrid');
+  opts.forEach((o, k) => {
+    const c = el('div', 'pcard'); c.tabIndex = 0; c.setAttribute('role', 'button');
+    c.append(el('span', 'key', KEYS[k]));
+    c.append(frame(o.h, q.h || 120), el('div', 'shield'));
+    const pick = () => {
+      if (S.answered) return;
+      cards.forEach((cc, j) => { if (opts[j].ok) cc.classList.add('ok'); });
+      if (!o.ok) c.classList.add('bad');
+      done(o.ok);
+    };
+    c.onclick = pick;
+    c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
+    cards.push(c); grid.append(c);
+  });
+  body.append(grid);
+};
+BUILD.click = (q, body, done) => {
+  const answers = [].concat(q.answer).map(normSel);
+  const wantAttr = answers[0][0] === '@';
+  const box = codeBox(getCode(q));
+  box.firstChild.classList.add('clickable');
+  body.append(box);
+  const grp = t => t.closest(wantAttr ? '[data-asel]' : '[data-sel]');
+  const peers = t => wantAttr ? $$('[data-asel="' + t.dataset.asel + '"]', box) : $$('[data-t="' + t.dataset.t + '"]', box);
+  let hov = [];
+  box.onmouseover = e => {
+    hov.forEach(x => x.classList.remove('hov'));
+    const t = S.answered ? null : grp(e.target);
+    hov = t ? peers(t) : [];
+    hov.forEach(x => x.classList.add('hov'));
+  };
+  box.onmouseleave = () => hov.forEach(x => x.classList.remove('hov'));
+  box.onclick = e => {
+    if (S.answered) return;
+    const t = grp(e.target); if (!t) return;
+    const got = wantAttr ? t.dataset.asel : t.dataset.sel;
+    const ok = answers.includes(got);
+    hov.forEach(x => x.classList.remove('hov'));
+    peers(t).forEach(x => x.classList.add(ok ? 'ok' : 'bad'));
+    if (!ok) answers.forEach(a => $$('[' + (wantAttr ? 'data-asel' : 'data-sel') + '="' + a + '"]', box).forEach(x => x.classList.add('ok')));
+    done(ok);
+  };
+  body.append(el('div', 'sub', wantAttr ? 'Click directly on the attribute.' : 'Click on the tag you think is right (any part of it).'));
+};
+BUILD.bug = (q, body, done) => {
+  const answers = [].concat(q.answer);
+  const box = codeBox(getCode(q));
+  box.firstChild.classList.add('lineclick');
+  body.append(box);
+  box.onclick = e => {
+    if (S.answered) return;
+    const l = e.target.closest('.cl'); if (!l) return;
+    const ok = answers.includes(+l.dataset.line);
+    l.classList.add(ok ? 'ok' : 'bad');
+    if (!ok) answers.forEach(a => { const x = $('.cl[data-line="' + a + '"]', box); if (x) x.classList.add('ok'); });
+    done(ok);
+  };
+  body.append(el('div', 'sub', 'Click a whole line.'));
+};
+BUILD.match = (q, body, done) => {
+  const pairs = q.pairs;
+  body.append(el('div', 'sub', 'Click a snippet, then click the preview it produces.'));
+  const wrap = el('div', 'match'), left = el('div', 'mleft'), right = el('div', 'mright');
+  const status = el('div', 'mstatus');
+  const Ls = pairs.map((p, i) => { const d = el('div', 'mitem'); d.append(el('pre', 'mini', highlight(norm0(p.code), { flat: true }))); d._i = i; return d; });
+  const Rs = shuffle(pairs.map((p, i) => i)).map(i => {
+    const d = el('div', 'mitem mprev'); d._i = i;
+    d.append(frame(norm0(pairs[i].code), q.h || 80), el('div', 'shield'));
+    return d;
+  });
+  Ls.forEach(d => left.append(d)); Rs.forEach(d => right.append(d));
+  wrap.append(left, right); body.append(wrap, status);
+  let sel = null, flawed = false, remaining = pairs.length;
+  Ls.forEach(d => d.onclick = () => {
+    if (S.answered || d.classList.contains('done')) return;
+    Ls.forEach(x => x.classList.remove('sel')); d.classList.add('sel'); sel = d;
+  });
+  Rs.forEach(d => d.onclick = () => {
+    if (S.answered || !sel || d.classList.contains('done')) return;
+    if (sel._i === d._i) {
+      const num = pairs.length - remaining + 1;
+      [sel, d].forEach(x => { x.classList.add('done'); x.classList.remove('sel'); x.append(el('span', 'mnum', String(num))); });
+      sel = null; remaining--;
+      if (remaining === 0) done(!flawed);
+    } else {
+      flawed = true;
+      d.classList.add('shake'); setTimeout(() => d.classList.remove('shake'), 400);
+      sel.classList.remove('sel'); sel = null;
+      status.textContent = 'Not a match. Keep going, but this question now counts as a mistake.';
+    }
+  });
+};
+const FORM_HELPER = '<scr' + 'ipt>(function(){var f=document.forms[0],bad=false;f.addEventListener("invalid",function(){bad=true},true);' +
+  'f.addEventListener("submit",function(e){e.preventDefault();parent.postMessage({fs:"submitted"},"*")});' +
+  'f.querySelector("[type=submit]").addEventListener("click",function(){bad=false;setTimeout(function(){if(bad)parent.postMessage({fs:"blocked"},"*")},60)});})();</scr' + 'ipt>';
+BUILD.form = (q, body, done) => {
+  const form = '<form action="#">\n' + q.html.split('\n').map(l => '  ' + l).join('\n') + '\n  <button type="submit">Submit</button>\n</form>';
+  body.append(codeBox(form));
+  const live = el('div', 'live'); live.hidden = true;
+  const c = choices(['Blocked by the browser', 'Submits successfully'], q.answer === 'blocked' ? 0 : 1, esc, ok => {
+    done(ok);
+    live.hidden = false;
+    const f = frame(form + FORM_HELPER, 110, 'allow-scripts allow-forms');
+    const st = el('div', 'lstatus', 'Press Submit in the form above to see what really happens.');
+    live.append(el('div', 'sub', 'Now try it yourself (you can change the fields too):'), f, st);
+    msgHandlers.push(e => {
+      if (e.source !== f.contentWindow || !e.data || !e.data.fs) return;
+      st.className = 'lstatus ' + (e.data.fs === 'submitted' ? 's1' : 's2');
+      st.textContent = e.data.fs === 'submitted' ? '✔ The browser accepted the form and would send it now.' : '✖ The browser blocked the submission and showed a validation message.';
+    });
+  }, true);
+  body.append(c, live);
+};
+// Keyboard shortcuts: A-D or 1-4 pick the n-th option
+document.addEventListener('keydown', e => {
+  if (S.mode !== 'quiz' || S.answered || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ''))) return;
+  const k = e.key.length === 1 ? e.key.toUpperCase() : '';
+  let idx = KEYS.indexOf(k); if (idx < 0 && /[1-7]/.test(k)) idx = +k - 1;
+  if (idx < 0) return;
+  const t = $$('#v-learn .choices .choice, #v-learn .pgrid .pcard')[idx];
+  if (t) t.click();
+});
+
+/* ================= playground ================= */
+const pg = { ready: false, hover: -1, toks: [] };
+const PG_HELPER = '<style>[data-pg-hl]{outline:2px solid #f59e0b!important;outline-offset:-2px;background-color:rgba(245,158,11,.22)!important}</style>' +
+  '<scr' + 'ipt>addEventListener("mouseover",function(e){var t=e.target.closest&&e.target.closest("[data-pg]");parent.postMessage({pg:t?+t.getAttribute("data-pg"):-1},"*")});' +
+  'addEventListener("mouseout",function(e){if(!e.relatedTarget)parent.postMessage({pg:-1},"*")});' +
+  'addEventListener("message",function(e){var o=document.querySelectorAll("[data-pg-hl]");for(var i=0;i<o.length;i++)o[i].removeAttribute("data-pg-hl");' +
+  'if(e.data&&e.data.hl>=0){var t=document.querySelector("[data-pg=\\""+e.data.hl+"\\"]");if(t)t.setAttribute("data-pg-hl","")}});</scr' + 'ipt>';
+const PG_STARTER = '<h1>Hello, HTML!</h1>\n<p>Hover a tag in the editor, or an element on the right.</p>\n<ul>\n  <li>One</li>\n  <li><a href="#">Two</a></li>\n</ul>';
+function pgDoc(src, toks) {
+  let out = '', cur = 0;
+  toks.forEach(t => { if (t.type === 'open') { const at = t.start + 1 + t.name.length; out += src.slice(cur, at) + ' data-pg="' + t.pg + '"'; cur = at; } });
+  out += src.slice(cur);
+  return previewDoc(out) + PG_HELPER;
+}
+function pgSetHover(id, fromFrame) {
+  if (id === pg.hover) return;
+  pg.hover = id;
+  $$('.pgon', pg.hl).forEach(x => x.classList.remove('pgon'));
+  if (id >= 0) $$('[data-pg="' + id + '"]', pg.hl).forEach(x => x.classList.add('pgon'));
+  if (!fromFrame && pg.frame.contentWindow) pg.frame.contentWindow.postMessage({ hl: id }, '*');
+  if (id >= 0) {
+    const t = pg.toks.find(x => x.type === 'open' && x.pg === id);
+    pg.info.innerHTML = t ? tipFor(t.name) : '';
+  } else pg.info.textContent = 'Hover a tag to see what it is.';
+}
+function pgRender() {
+  const src = pg.ta.value;
+  pg.toks = tokenize(src);
+  pg.hl.innerHTML = highlight(src, { flat: true, pg: true }) + '\n ';
+  pg.hover = -2; pgSetHover(-1);
+  clearTimeout(pg.timer);
+  pg.timer = setTimeout(() => { pg.frame.srcdoc = pgDoc(src, pg.toks); }, 250);
+}
+function initPlayground() {
+  if (pg.ready) return;
+  pg.ready = true;
+  const v = $('#v-play');
+  v.innerHTML = '<div class="pgbar"><label>Load example <select id="pgsel"></select></label><button class="btn ghost" id="pgreset">Reset</button>' +
+    '<span class="muted">Edit on the left. Hover a tag on either side to highlight its twin.</span></div>' +
+    '<div class="pgsplit"><div class="pgleft"><div class="pgedit"><pre id="pghl" aria-hidden="true"></pre>' +
+    '<textarea id="pgta" spellcheck="false" wrap="off" aria-label="HTML editor"></textarea></div><div class="pginfo" id="pginfo"></div></div>' +
+    '<div class="pgright"><iframe id="pgframe" title="Live preview" sandbox="allow-scripts"></iframe></div></div>';
+  pg.ta = $('#pgta'); pg.hl = $('#pghl'); pg.frame = $('#pgframe'); pg.info = $('#pginfo');
+  const presets = [{ name: 'Starter', code: PG_STARTER }];
+  COURSE.levels.forEach((L, i) => presets.push({ name: 'Level ' + (i + 1) + ': ' + L.title, code: norm0(L.example.code === '@shared' ? L.shared : L.example.code) }));
+  const sel = $('#pgsel');
+  presets.forEach((p, i) => sel.append(new Option(p.name, i)));
+  sel.onchange = () => { pg.ta.value = presets[+sel.value].code; pgRender(); };
+  $('#pgreset').onclick = () => { sel.value = 0; pg.ta.value = PG_STARTER; pgRender(); };
+  pg.ta.oninput = pgRender;
+  pg.ta.onscroll = () => { pg.hl.scrollTop = pg.ta.scrollTop; pg.hl.scrollLeft = pg.ta.scrollLeft; };
+  pg.ta.onkeydown = e => {
+    if (e.key === 'Tab') { e.preventDefault(); pg.ta.setRangeText('  ', pg.ta.selectionStart, pg.ta.selectionEnd, 'end'); pgRender(); }
+  };
+  // The textarea sits on top of the highlighted layer, so look at everything under the pointer
+  pg.ta.onmousemove = e => {
+    const s = document.elementsFromPoint(e.clientX, e.clientY).find(x => x.dataset && x.dataset.pg !== undefined && pg.hl.contains(x));
+    pgSetHover(s ? +s.dataset.pg : -1);
+  };
+  pg.ta.onmouseleave = () => pgSetHover(-1);
+  msgHandlers.push(e => { if (e.source === pg.frame.contentWindow && e.data && 'pg' in e.data) pgSetHover(e.data.pg, true); });
+  pg.ta.value = PG_STARTER;
+  pgRender();
+}
+
+/* ================= cheat sheet ================= */
+const ch = { ready: false, kind: 'all', q: '' };
+function cheatName(r) { return r[1] === 'tag' ? (r[0] === '!DOCTYPE' ? '<!DOCTYPE html>' : '<' + r[0] + '>') : r[0]; }
+function initCheat() {
+  if (ch.ready) return;
+  ch.ready = true;
+  const v = $('#v-cheat');
+  v.innerHTML = '<h2>Cheat sheet</h2><div class="csearch"><input type="search" id="cq" placeholder="Search tags, attributes, descriptions…" aria-label="Search the cheat sheet">' +
+    '<div class="chips" id="cchips"></div><span class="muted" id="ccount"></span></div><div class="cgrid" id="cgrid"></div>';
+  const chips = $('#cchips');
+  [['all', 'All'], ['tag', 'Tags'], ['attr', 'Attributes'], ['value', 'Values']].forEach(([k, label]) => {
+    const b = el('button', k === 'all' ? 'on' : '', label);
+    b.onclick = () => { ch.kind = k; $$('button', chips).forEach(x => x.classList.toggle('on', x === b)); drawCheat(); };
+    chips.append(b);
+  });
+  $('#cq').oninput = e => { ch.q = e.target.value.trim().toLowerCase(); drawCheat(); };
+  drawCheat();
+}
+function drawCheat() {
+  const g = $('#cgrid'); g.innerHTML = '';
+  const rows = CHEAT.filter(r => (ch.kind === 'all' || r[1] === ch.kind) &&
+    (!ch.q || (r[0] + ' ' + (r[5] || []).join(' ') + ' ' + r[3] + ' ' + r[4] + ' ' + r[1] + ' level ' + r[2]).toLowerCase().includes(ch.q)));
+  rows.forEach(r => {
+    const c = el('div', 'ccard');
+    c.innerHTML = '<div class="chead"><code class="cname">' + esc(cheatName(r)) + '</code><span class="chip">' + r[1] + '</span><span class="chip lv">Level ' + r[2] + '</span></div>' +
+      '<p>' + fmt(r[3]) + '</p><pre class="mini">' + highlight(r[4], { flat: true }) + '</pre>';
+    g.append(c);
+  });
+  $('#ccount').textContent = rows.length + ' of ' + CHEAT.length;
+  if (!rows.length) g.append(el('p', 'muted', 'Nothing matches “' + esc(ch.q) + '”.'));
+}
+
+/* ================= authoring checker ================= */
+window.checkCourse = function () {
+  const issues = [], types = Object.keys(BUILD);
+  const hasSel = (toks, s) => { s = normSel(s); return toks.some(t => (s[0] === '@' ? (t.attrs || []).some(a => a.sel === s) : (t.type === 'open' || t.type === 'close') && t.sel === s)); };
+  COURSE.levels.forEach(L => {
+    const min = ['L6', 'L7', 'L10'].includes(L.id) ? 15 : 10;
+    if (L.questions.length < min) issues.push(L.id + ': only ' + L.questions.length + ' questions (need ' + min + ')');
+    if (L.id === 'L10') { const n = norm0(L.shared).split('\n').length; if (n < 60 || n > 120) issues.push('L10: shared page has ' + n + ' lines (60-120 wanted)'); }
+    const cnt = {};
+    L.questions.forEach(q => {
+      const w = q.id + ': ';
+      if (!types.includes(q.type)) issues.push(w + 'unknown type ' + q.type);
+      if (!q.q) issues.push(w + 'missing q');
+      if (!q.why) issues.push(w + 'missing why');
+      (q.topics || []).forEach(t => { cnt[t] = (cnt[t] || 0) + 1; if (!L.topicList.includes(t)) issues.push(w + 'topic not in topicList: ' + t); });
+      if (q.type === 'click') { const toks = tokenize(getCode(q)); [].concat(q.answer).forEach(a => { if (!hasSel(toks, a)) issues.push(w + 'click answer not found: ' + a); }); }
+      if (q.type === 'parent') { if (!hasSel(tokenize(getCode(q)), q.target)) issues.push(w + 'parent target not found: ' + q.target); if (!q.options || !q.options[q.answer]) issues.push(w + 'bad answer index'); }
+      if (q.type === 'bug') { const n = getCode(q).split('\n').length; [].concat(q.answer).forEach(a => { if (a < 1 || a > n) issues.push(w + 'bug line out of range: ' + a); }); }
+      if (q.type === 'render' && (!q.wrong || q.wrong.length < 2)) issues.push(w + 'render needs at least 2 wrong previews');
+      if (q.type === 'tree') { if (q.options.length < 3 || !q.options[q.answer]) issues.push(w + 'tree options/answer'); q.options.forEach(o => { try { parseTree(o); } catch (e) { issues.push(w + 'bad tree ' + o); } }); }
+      if (['choice', 'happens', 'versus'].includes(q.type) && (!q.options || !q.options[q.answer])) issues.push(w + 'bad answer index');
+      if (q.type === 'form' && !['blocked', 'submits'].includes(q.answer)) issues.push(w + 'form answer must be blocked|submits');
+      if (q.type === 'match' && (!q.pairs || q.pairs.length < 2)) issues.push(w + 'match needs pairs');
+    });
+    (L.topicList || []).forEach(t => { if ((cnt[t] || 0) < 2) issues.push(L.id + ': topic "' + t + '" has ' + (cnt[t] || 0) + ' question(s), need 2'); });
+  });
+  return issues;
+};
+if (/[?&]check\b/.test(location.search)) {
+  const r = window.checkCourse();
+  console.log('Course check: ' + (r.length ? r.length + ' issue(s)' : 'OK'));
+  r.forEach(x => console.warn(x));
+}
+
+/* ================= boot ================= */
+updateStats();
+showLevels();
+})();
+</script>
+</body>
+</html>
